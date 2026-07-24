@@ -6,10 +6,10 @@ import { Trophy, ArrowRight, Medal, Crown } from "lucide-react";
 export const Route = createFileRoute("/leaderboard")({
   head: () => ({
     meta: [
-      { title: "المتصدرون — اختار أو اخسر" },
-      { name: "description", content: "أفضل اللاعبين ونتائجهم في لعبة اختار أو اخسر." },
+      { title: "المتصدرون — تحدّي" },
+      { name: "description", content: "أفضل اللاعبين ونتائجهم في لعبة تحدّي." },
       { property: "og:title", content: "المتصدرون" },
-      { property: "og:description", content: "أعلى النتائج في اختار أو اخسر." },
+      { property: "og:description", content: "أعلى النتائج في تحدّي." },
     ],
   }),
   component: LeaderboardPage,

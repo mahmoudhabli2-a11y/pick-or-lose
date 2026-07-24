@@ -6,9 +6,9 @@ import { Heart, Trophy, Zap, Calendar, Play, Medal } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "اختار أو اخسر — الرئيسية" },
-      { name: "description", content: "ابدأ اللعب في اختار أو اخسر: أسئلة سريعة، 5 ثوانٍ لكل سؤال." },
-      { property: "og:title", content: "اختار أو اخسر — الرئيسية" },
+      { title: "تحدّي — الرئيسية" },
+      { name: "description", content: "ابدأ اللعب في تحدّي: أسئلة سريعة، 5 ثوانٍ لكل سؤال." },
+      { property: "og:title", content: "تحدّي — الرئيسية" },
       { property: "og:description", content: "أسئلة عربية سريعة الإيقاع. ابدأ اللعب الآن." },
     ],
   }),

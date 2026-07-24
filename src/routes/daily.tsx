@@ -8,7 +8,7 @@ const TIME = 15;
 export const Route = createFileRoute("/daily")({
   head: () => ({
     meta: [
-      { title: "تحدي اليوم — اختار أو اخسر" },
+      { title: "تحدي اليوم — تحدّي" },
       { name: "description", content: "تحدٍّ خاص جديد كل يوم. جرّب حظك ومهاراتك!" },
       { property: "og:title", content: "تحدي اليوم" },
       { property: "og:description", content: "سؤال مميز كل يوم." },
