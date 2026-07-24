@@ -9,9 +9,9 @@ const TOTAL = 10;
 export const Route = createFileRoute("/game")({
   head: () => ({
     meta: [
-      { title: "اللعب — اختار أو اخسر" },
+      { title: "اللعب — تحدّي" },
       { name: "description", content: "٥ ثوانٍ لكل سؤال. اختر الإجابة الصحيحة قبل انتهاء الوقت." },
-      { property: "og:title", content: "اللعب — اختار أو اخسر" },
+      { property: "og:title", content: "اللعب — تحدّي" },
       { property: "og:description", content: "٥ ثوانٍ لكل سؤال. اختر الإجابة الصحيحة." },
     ],
   }),
