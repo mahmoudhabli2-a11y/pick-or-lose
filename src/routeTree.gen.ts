@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResultsRouteImport } from './routes/results'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as GameRouteImport } from './routes/game'
 import { Route as DailyRouteImport } from './routes/daily'
@@ -18,6 +19,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const ResultsRoute = ResultsRouteImport.update({
   id: '/results',
   path: '/results',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeaderboardRoute = LeaderboardRouteImport.update({
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/daily': typeof DailyRoute
   '/game': typeof GameRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/profile': typeof ProfileRoute
   '/results': typeof ResultsRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/daily': typeof DailyRoute
   '/game': typeof GameRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/profile': typeof ProfileRoute
   '/results': typeof ResultsRoute
 }
 export interface FileRoutesById {
@@ -61,14 +69,22 @@ export interface FileRoutesById {
   '/daily': typeof DailyRoute
   '/game': typeof GameRoute
   '/leaderboard': typeof LeaderboardRoute
+  '/profile': typeof ProfileRoute
   '/results': typeof ResultsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/daily' | '/game' | '/leaderboard' | '/results'
+  fullPaths: '/' | '/daily' | '/game' | '/leaderboard' | '/profile' | '/results'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/daily' | '/game' | '/leaderboard' | '/results'
-  id: '__root__' | '/' | '/daily' | '/game' | '/leaderboard' | '/results'
+  to: '/' | '/daily' | '/game' | '/leaderboard' | '/profile' | '/results'
+  id:
+    | '__root__'
+    | '/'
+    | '/daily'
+    | '/game'
+    | '/leaderboard'
+    | '/profile'
+    | '/results'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,6 +92,7 @@ export interface RootRouteChildren {
   DailyRoute: typeof DailyRoute
   GameRoute: typeof GameRoute
   LeaderboardRoute: typeof LeaderboardRoute
+  ProfileRoute: typeof ProfileRoute
   ResultsRoute: typeof ResultsRoute
 }
 
@@ -86,6 +103,13 @@ declare module '@tanstack/react-router' {
       path: '/results'
       fullPath: '/results'
       preLoaderRoute: typeof ResultsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/leaderboard': {
@@ -124,6 +148,7 @@ const rootRouteChildren: RootRouteChildren = {
   DailyRoute: DailyRoute,
   GameRoute: GameRoute,
   LeaderboardRoute: LeaderboardRoute,
+  ProfileRoute: ProfileRoute,
   ResultsRoute: ResultsRoute,
 }
 export const routeTree = rootRouteImport

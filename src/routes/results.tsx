@@ -25,7 +25,7 @@ function ResultsPage() {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem("ekhtar-last-game");
+      const raw = localStorage.getItem("tahaddi-last-game") ?? localStorage.getItem("ekhtar-last-game");
       if (raw) setResult(JSON.parse(raw));
     } catch {}
   }, []);

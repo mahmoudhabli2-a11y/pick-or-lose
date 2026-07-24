@@ -38,6 +38,7 @@
   --color-fun-2: var(--fun-2);
   --color-fun-3: var(--fun-3);
   --color-fun-4: var(--fun-4);
+  --color-fun-5: var(--fun-5);
   --font-display: "Cairo", "Tajawal", system-ui, sans-serif;
 }
 
@@ -67,6 +68,7 @@
   --fun-2: oklch(0.72 0.18 200); /* cyan */
   --fun-3: oklch(0.78 0.19 90);  /* yellow */
   --fun-4: oklch(0.65 0.22 270); /* violet */
+  --fun-5: oklch(0.72 0.2 160);  /* teal */
   --border: oklch(0.9 0.03 300);
   --input: oklch(0.92 0.02 300);
   --ring: oklch(0.62 0.24 300);

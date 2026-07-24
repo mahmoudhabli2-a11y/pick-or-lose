@@ -1,7 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { getDailyChallenge, loadPlayer, savePlayer, type Question } from "@/lib/quiz-data";
-import { ArrowRight, Check, X, Calendar, Sparkles } from "lucide-react";
+import {
+  getDailyChallenge,
+  loadPlayer,
+  savePlayer,
+  updateStreak,
+  grantAchievements,
+  secondsUntilNextDaily,
+  type Challenge,
+} from "@/lib/quiz-data";
+import { ArrowRight, Check, X, Calendar, Sparkles, Timer } from "lucide-react";
 
 const TIME = 15;
 
@@ -9,9 +17,9 @@ export const Route = createFileRoute("/daily")({
   head: () => ({
     meta: [
       { title: "تحدي اليوم — تحدّي" },
-      { name: "description", content: "تحدٍّ خاص جديد كل يوم. جرّب حظك ومهاراتك!" },
-      { property: "og:title", content: "تحدي اليوم" },
-      { property: "og:description", content: "سؤال مميز كل يوم." },
+      { name: "description", content: "تحدٍّ ذهني خاص جديد كل يوم — عزّز سلسلة أيامك المتتالية." },
+      { property: "og:title", content: "تحدي اليوم — تحدّي" },
+      { property: "og:description", content: "سؤال يومي مميز مع مكافأة نقاط إضافية." },
     ],
   }),
   component: DailyPage,
@@ -19,17 +27,23 @@ export const Route = createFileRoute("/daily")({
 
 function DailyPage() {
   const navigate = useNavigate();
-  const [q] = useState<Question>(() => getDailyChallenge());
+  const [q] = useState<Challenge>(() => getDailyChallenge());
   const [selected, setSelected] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [timeLeft, setTimeLeft] = useState(TIME);
   const [alreadyDone, setAlreadyDone] = useState(false);
+  const [countdown, setCountdown] = useState(secondsUntilNextDaily());
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const p = loadPlayer();
-    const today = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+    const today = Math.floor(Date.now() / 86400000);
     if (p.lastDailyDay === today) setAlreadyDone(true);
+  }, []);
+
+  useEffect(() => {
+    const i = setInterval(() => setCountdown(secondsUntilNextDaily()), 1000);
+    return () => clearInterval(i);
   }, []);
 
   useEffect(() => {
@@ -53,25 +67,42 @@ function DailyPage() {
     if (timerRef.current) clearInterval(timerRef.current);
     setSelected(choice);
     setRevealed(true);
-    const p = loadPlayer();
-    const today = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+    let p = loadPlayer();
+    const today = Math.floor(Date.now() / 86400000);
     const isRight = choice !== null && choice === q.correct;
-    savePlayer({
+    const reward = isRight ? 50 + timeLeft * 3 : 0;
+    p = updateStreak(p);
+    p = {
       ...p,
-      score: p.score + (isRight ? 50 : 0),
-      bestScore: Math.max(p.bestScore, p.score + (isRight ? 50 : 0)),
+      xp: p.xp + reward,
+      score: p.score + reward,
+      bestScore: Math.max(p.bestScore, p.score + reward),
+      dailyBest: Math.max(p.dailyBest, reward),
       lastDailyDay: today,
-    });
+      totalCorrect: p.totalCorrect + (isRight ? 1 : 0),
+      totalWrong: p.totalWrong + (isRight ? 0 : 1),
+    };
+    p = grantAchievements(p).player;
+    savePlayer(p);
+    setAlreadyDone(true);
   }
 
-  if (alreadyDone) {
+  const hh = String(Math.floor(countdown / 3600)).padStart(2, "0");
+  const mm = String(Math.floor((countdown % 3600) / 60)).padStart(2, "0");
+  const ss = String(countdown % 60).padStart(2, "0");
+
+  if (alreadyDone && !revealed) {
     return (
       <div className="min-h-screen px-5 pt-10 pb-8 flex flex-col">
         <div className="mx-auto w-full max-w-md flex-1 flex flex-col items-center justify-center text-center text-white">
-          <div className="text-7xl mb-4">🌟</div>
+          <div className="text-7xl mb-4 animate-pop">🌟</div>
           <h1 className="text-3xl font-black drop-shadow-lg">أنجزت تحدي اليوم!</h1>
           <p className="mt-2 text-white/85 font-semibold">عد غداً لتحدٍّ جديد.</p>
-          <Link to="/" className="mt-8 rounded-2xl bg-white text-[color:var(--primary)] px-6 py-3 font-black shadow-fun">
+          <div className="mt-6 rounded-2xl bg-white/15 backdrop-blur border border-white/20 px-6 py-3 text-white inline-flex items-center gap-2">
+            <Timer className="size-5" />
+            <span className="font-black">{hh}:{mm}:{ss}</span>
+          </div>
+          <Link to="/" className="mt-6 rounded-2xl bg-white text-[color:var(--primary)] px-6 py-3 font-black shadow-fun">
             الرئيسية
           </Link>
         </div>
@@ -100,9 +131,9 @@ function DailyPage() {
         <div className="mt-6 text-center animate-pop">
           <div className="inline-flex items-center gap-2 rounded-full bg-gradient-accent text-white px-4 py-1.5 shadow-card">
             <Sparkles className="size-4" />
-            <span className="font-black text-sm">مكافأة +50 نقطة</span>
+            <span className="font-black text-sm">مكافأة +٥٠ نقطة</span>
           </div>
-          <h1 className="mt-3 text-3xl font-black text-white drop-shadow-lg">التحدي الخاص</h1>
+          <h1 className="mt-3 text-3xl font-black text-white drop-shadow-lg">التحدّي الخاص</h1>
         </div>
 
         {/* Timer bar */}
@@ -121,7 +152,7 @@ function DailyPage() {
 
         <div className="mt-6 rounded-3xl bg-white shadow-fun p-6 animate-pop">
           <div className="inline-block text-xs font-bold rounded-full bg-[color:var(--fun-4)]/10 text-[color:var(--fun-4)] px-3 py-1">
-            {q.category}
+            التحدّي اليومي
           </div>
           <h2 className="mt-3 text-xl font-black text-foreground leading-snug">{q.question}</h2>
         </div>
