@@ -27,12 +27,10 @@ function Home() {
         {/* Logo */}
         <div className="text-center animate-pop">
           <div className="inline-block rounded-3xl bg-white/15 backdrop-blur-sm px-6 py-2 mb-4 border border-white/20">
-            <span className="text-white/90 text-sm font-bold tracking-wider">لعبة عربية سريعة</span>
+            <span className="text-white/90 text-sm font-bold tracking-wider">🏆 تحدّى عقلك</span>
           </div>
-          <h1 className="text-6xl font-black text-white leading-tight drop-shadow-lg">
-            اختار
-            <span className="mx-2 text-[color:var(--fun-3)]">أو</span>
-            اخسر
+          <h1 className="text-7xl font-black text-white leading-tight drop-shadow-lg">
+            تحدّي
           </h1>
           <p className="mt-3 text-white/85 font-semibold text-lg">
             ٥ ثوانٍ فقط لكل سؤال ⏱️
