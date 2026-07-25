@@ -67,7 +67,26 @@ function Home() {
             <Link to="/profile" className="size-10 rounded-full bg-white/15 backdrop-blur border border-white/20 flex items-center justify-center text-white" aria-label="الملف">
               <User className="size-5" />
             </Link>
+            {session ? (
+              <button
+                onClick={() => signOut()}
+                className="size-10 rounded-full bg-white/15 backdrop-blur border border-white/20 flex items-center justify-center text-white"
+                aria-label="خروج"
+              >
+                <LogOut className="size-5" />
+              </button>
+            ) : (
+              <Link
+                to="/auth"
+                search={{ mode: "signin" }}
+                className="size-10 rounded-full bg-white text-[color:var(--primary)] flex items-center justify-center"
+                aria-label="تسجيل الدخول"
+              >
+                <LogIn className="size-5" />
+              </Link>
+            )}
           </div>
+
         </div>
 
         {/* Brand */}
