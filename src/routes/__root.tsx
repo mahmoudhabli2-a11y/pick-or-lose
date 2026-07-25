@@ -126,6 +126,9 @@ function RootComponent() {
 
   useEffect(() => {
     let mounted = true;
+    // Register PWA service worker (guarded — production only, not in preview/iframe).
+    import("@/lib/register-sw").then(({ registerServiceWorker }) => registerServiceWorker());
+
     // Sync cloud progress on sign-in.
     import("@/integrations/supabase/client").then(({ supabase }) => {
       import("@/lib/auth").then(({ syncProgressFromCloud }) => {
