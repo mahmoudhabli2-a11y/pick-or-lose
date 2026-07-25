@@ -83,10 +83,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "لعبة تحدّي العقل والمهارة بالعربية مع تحديات يومية ولوحة متصدرين." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "theme-color", content: "#7c3aed" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "تحدّي" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { rel: "icon", href: "/icon-512.png", type: "image/png", sizes: "512x512" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" },
@@ -118,6 +126,9 @@ function RootComponent() {
 
   useEffect(() => {
     let mounted = true;
+    // Register PWA service worker (guarded — production only, not in preview/iframe).
+    import("@/lib/register-sw").then(({ registerServiceWorker }) => registerServiceWorker());
+
     // Sync cloud progress on sign-in.
     import("@/integrations/supabase/client").then(({ supabase }) => {
       import("@/lib/auth").then(({ syncProgressFromCloud }) => {
