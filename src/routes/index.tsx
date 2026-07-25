@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   loadPlayer,
@@ -12,7 +12,8 @@ import {
   unlockedDifficulties,
   ACHIEVEMENTS,
 } from "@/lib/quiz-data";
-import { Trophy, Zap, Calendar, Play, Flame, ChevronLeft, Award, User } from "lucide-react";
+import { useAuth, isGuest, signOut } from "@/lib/auth";
+import { Trophy, Zap, Calendar, Play, Flame, ChevronLeft, Award, User, LogOut, LogIn } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -28,8 +29,21 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const [player, setPlayer] = useState<PlayerState | null>(null);
-  useEffect(() => setPlayer(loadPlayer()), []);
+  const { session, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (loading) return;
+    // First-open flow: no session AND not a guest → welcome.
+    if (!session && !isGuest()) {
+      navigate({ to: "/welcome", replace: true });
+      return;
+    }
+    setPlayer(loadPlayer());
+  }, [session, loading, navigate]);
+
   const p = player;
+
 
   return (
     <div className="min-h-screen px-4 pt-6 pb-24 flex flex-col">
@@ -53,7 +67,26 @@ function Home() {
             <Link to="/profile" className="size-10 rounded-full bg-white/15 backdrop-blur border border-white/20 flex items-center justify-center text-white" aria-label="الملف">
               <User className="size-5" />
             </Link>
+            {session ? (
+              <button
+                onClick={() => signOut()}
+                className="size-10 rounded-full bg-white/15 backdrop-blur border border-white/20 flex items-center justify-center text-white"
+                aria-label="خروج"
+              >
+                <LogOut className="size-5" />
+              </button>
+            ) : (
+              <Link
+                to="/auth"
+                search={{ mode: "signin" }}
+                className="size-10 rounded-full bg-white text-[color:var(--primary)] flex items-center justify-center"
+                aria-label="تسجيل الدخول"
+              >
+                <LogIn className="size-5" />
+              </Link>
+            )}
           </div>
+
         </div>
 
         {/* Brand */}

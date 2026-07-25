@@ -261,6 +261,10 @@ export function loadPlayer(): PlayerState {
 
 export function savePlayer(p: PlayerState) {
   try { localStorage.setItem(KEY, JSON.stringify(p)); } catch {}
+  if (typeof window !== "undefined") {
+    // Fire-and-forget cloud sync when signed in.
+    import("./auth").then(({ maybePushProgress }) => maybePushProgress(p)).catch(() => {});
+  }
 }
 
 export function updateStreak(p: PlayerState): PlayerState {

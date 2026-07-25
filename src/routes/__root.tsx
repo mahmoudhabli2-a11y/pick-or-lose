@@ -114,6 +114,32 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    let mounted = true;
+    // Sync cloud progress on sign-in.
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      import("@/lib/auth").then(({ syncProgressFromCloud }) => {
+        supabase.auth.getSession().then(({ data }) => {
+          if (mounted && data.session?.user) syncProgressFromCloud(data.session.user);
+        });
+        const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+          if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+          router.invalidate();
+          if (event === "SIGNED_IN" && session?.user) {
+            syncProgressFromCloud(session.user);
+          }
+        });
+        (window as unknown as { __authUnsub?: () => void }).__authUnsub = () =>
+          sub.subscription.unsubscribe();
+      });
+    });
+    return () => {
+      mounted = false;
+      (window as unknown as { __authUnsub?: () => void }).__authUnsub?.();
+    };
+  }, [router]);
 
   return (
     <QueryClientProvider client={queryClient}>
