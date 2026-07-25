@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   loadPlayer,
@@ -12,7 +12,8 @@ import {
   unlockedDifficulties,
   ACHIEVEMENTS,
 } from "@/lib/quiz-data";
-import { Trophy, Zap, Calendar, Play, Flame, ChevronLeft, Award, User } from "lucide-react";
+import { useAuth, isGuest, signOut } from "@/lib/auth";
+import { Trophy, Zap, Calendar, Play, Flame, ChevronLeft, Award, User, LogOut, LogIn } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -28,8 +29,21 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const [player, setPlayer] = useState<PlayerState | null>(null);
-  useEffect(() => setPlayer(loadPlayer()), []);
+  const { session, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (loading) return;
+    // First-open flow: no session AND not a guest → welcome.
+    if (!session && !isGuest()) {
+      navigate({ to: "/welcome", replace: true });
+      return;
+    }
+    setPlayer(loadPlayer());
+  }, [session, loading, navigate]);
+
   const p = player;
+
 
   return (
     <div className="min-h-screen px-4 pt-6 pb-24 flex flex-col">
