@@ -105,6 +105,16 @@ function ResultsPage() {
             <StatBox tone="success" icon={<Check className="size-5" />} label="صحيحة" value={result.correct} />
             <StatBox tone="danger" icon={<X className="size-5" />} label="خاطئة" value={result.wrong} />
           </div>
+
+          <div className="mt-5">
+            {doubled ? (
+              <div className="rounded-2xl bg-gradient-success text-white px-4 py-3 font-black text-center inline-flex w-full items-center justify-center gap-2">
+                <Sparkles className="size-5" /> تم مضاعفة النقاط ×٢
+              </div>
+            ) : (
+              <RewardedAdButton label="شاهد إعلاناً وضاعف النقاط ×٢" onReward={doubleReward} />
+            )}
+          </div>
         </div>
 
         {/* Save to leaderboard */}
