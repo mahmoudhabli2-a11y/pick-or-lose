@@ -13,7 +13,7 @@ import {
   ACHIEVEMENTS,
 } from "@/lib/quiz-data";
 import { useAuth, isGuest, signOut } from "@/lib/auth";
-import { Trophy, Zap, Calendar, Play, Flame, ChevronLeft, Award, User, LogOut, LogIn } from "lucide-react";
+import { Trophy, Zap, Calendar, Play, Flame, ChevronLeft, Award, User, LogOut, LogIn, Heart, Settings } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -64,6 +64,13 @@ function Home() {
               <Flame className="size-4 text-[color:var(--fun-3)]" />
               <span className="text-sm font-black">{p?.streak ?? 0}</span>
             </div>
+            <div className="rounded-full bg-white/15 backdrop-blur px-3 py-1.5 flex items-center gap-1 border border-white/20 text-white">
+              <Heart className="size-4 fill-[color:var(--fun-1)] text-[color:var(--fun-1)]" />
+              <span className="text-sm font-black">{hearts}</span>
+            </div>
+            <Link to="/settings" className="size-10 rounded-full bg-white/15 backdrop-blur border border-white/20 flex items-center justify-center text-white" aria-label="الإعدادات">
+              <Settings className="size-5" />
+            </Link>
             <Link to="/profile" className="size-10 rounded-full bg-white/15 backdrop-blur border border-white/20 flex items-center justify-center text-white" aria-label="الملف">
               <User className="size-5" />
             </Link>
