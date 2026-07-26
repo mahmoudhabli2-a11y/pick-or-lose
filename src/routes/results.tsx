@@ -2,6 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { addLeaderboardEntry, loadPlayer, savePlayer, levelFromXp } from "@/lib/quiz-data";
 import { RewardedAdButton } from "@/components/rewarded-ad";
+import { ShareRankButton } from "@/components/share-rank";
+import { buildShareText } from "@/lib/share";
+import { countryFlag } from "@/lib/countries";
 import { RotateCw, Home, Trophy, Check, X, Save, Sparkles } from "lucide-react";
 
 type Result = { score: number; correct: number; wrong: number; total: number };
@@ -24,12 +27,14 @@ function ResultsPage() {
   const [name, setName] = useState("");
   const [saved, setSaved] = useState(false);
   const [doubled, setDoubled] = useState(false);
+  const [player, setPlayer] = useState(() => (typeof window === "undefined" ? null : null) as ReturnType<typeof loadPlayer> | null);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem("tahaddi-last-game") ?? localStorage.getItem("ekhtar-last-game");
       if (raw) setResult(JSON.parse(raw));
     } catch {}
+    setPlayer(loadPlayer());
   }, []);
 
   if (!result) {
@@ -51,7 +56,8 @@ function ResultsPage() {
   const title = pct >= 80 ? "بطل!" : pct >= 50 ? "أداء جيد" : "حاول مجدداً";
 
   function saveScore() {
-    addLeaderboardEntry(name.trim() || "لاعب", result!.score);
+    const pl = loadPlayer();
+    addLeaderboardEntry(name.trim() || pl.name || "لاعب", result!.score, pl.avatar, pl.country);
     setSaved(true);
   }
 
@@ -115,6 +121,22 @@ function ResultsPage() {
               <RewardedAdButton label="شاهد إعلاناً وضاعف النقاط ×٢" onReward={doubleReward} />
             )}
           </div>
+        </div>
+
+        {/* Share rank */}
+        <div className="mt-4 rounded-3xl bg-white/95 shadow-card p-5 animate-float-up">
+          <div className="font-black text-foreground mb-1 flex items-center gap-2">
+            {countryFlag(player?.country)} تحدَّ أصدقاءك
+          </div>
+          <p className="text-xs font-bold text-muted-foreground mb-3">شارك نتيجتك وشوف مين يتفوق عليك</p>
+          <ShareRankButton
+            text={buildShareText({
+              name: player?.name ?? "لاعب",
+              score: result.score,
+              level: player?.level,
+              flag: countryFlag(player?.country),
+            })}
+          />
         </div>
 
         {/* Save to leaderboard */}
