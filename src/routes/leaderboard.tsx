@@ -1,15 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { loadLeaderboard, filterLB, type LBEntry, type LBRange } from "@/lib/quiz-data";
-import { Trophy, ArrowRight, Medal, Crown } from "lucide-react";
+import { loadLeaderboard, filterLB, loadPlayer, type LBEntry, type LBRange } from "@/lib/quiz-data";
+import { countryFlag, countryName } from "@/lib/countries";
+import { Trophy, ArrowRight, Medal, Crown, Globe, Flag } from "lucide-react";
 
 export const Route = createFileRoute("/leaderboard")({
   head: () => ({
     meta: [
       { title: "المتصدرون — تحدي العقول" },
-      { name: "description", content: "لوحة متصدرين يومية وأسبوعية وشهرية وعلى الإطلاق." },
+      { name: "description", content: "لوحة متصدرين عالمية وحسب الدولة: يومية وأسبوعية وشهرية وعلى الإطلاق." },
       { property: "og:title", content: "المتصدرون — تحدي العقول" },
-      { property: "og:description", content: "شاهد أفضل اللاعبين وتصدَّر القائمة." },
+      { property: "og:description", content: "شاهد أفضل اللاعبين عالمياً وفي دولتك وتصدَّر القائمة." },
     ],
   }),
   component: LeaderboardPage,
@@ -22,12 +23,24 @@ const RANGES: { key: LBRange; label: string }[] = [
   { key: "all",     label: "الكل" },
 ];
 
+type Scope = "global" | "country";
+
 function LeaderboardPage() {
   const [all, setAll] = useState<LBEntry[]>([]);
   const [range, setRange] = useState<LBRange>("weekly");
+  const [scope, setScope] = useState<Scope>("global");
+  const [myCountry, setMyCountry] = useState<string | null>(null);
 
-  useEffect(() => setAll(loadLeaderboard()), []);
-  const entries = useMemo(() => filterLB(all, range), [all, range]);
+  useEffect(() => {
+    setAll(loadLeaderboard());
+    setMyCountry(loadPlayer().country ?? null);
+  }, []);
+
+  const entries = useMemo(() => {
+    const byRange = filterLB(all, range);
+    if (scope === "country") return byRange.filter((e) => e.country && e.country === myCountry);
+    return byRange;
+  }, [all, range, scope, myCountry]);
 
   return (
     <div className="min-h-screen px-5 pt-8 pb-8 flex flex-col">
@@ -43,8 +56,24 @@ function LeaderboardPage() {
           <div className="w-10" />
         </div>
 
-        {/* Tabs */}
-        <div className="mt-4 rounded-2xl bg-white/15 backdrop-blur border border-white/20 p-1 grid grid-cols-4 gap-1">
+        {/* Scope tabs */}
+        <div className="mt-4 rounded-2xl bg-white/15 backdrop-blur border border-white/20 p-1 grid grid-cols-2 gap-1">
+          <button
+            onClick={() => setScope("global")}
+            className={`rounded-xl py-2.5 text-sm font-black transition inline-flex items-center justify-center gap-1.5 ${scope === "global" ? "bg-white text-[color:var(--primary)]" : "text-white/90"}`}
+          >
+            <Globe className="size-4" /> العالمي
+          </button>
+          <button
+            onClick={() => setScope("country")}
+            className={`rounded-xl py-2.5 text-sm font-black transition inline-flex items-center justify-center gap-1.5 ${scope === "country" ? "bg-white text-[color:var(--primary)]" : "text-white/90"}`}
+          >
+            <Flag className="size-4" /> حسب الدولة {countryFlag(myCountry)}
+          </button>
+        </div>
+
+        {/* Range tabs */}
+        <div className="mt-2 rounded-2xl bg-white/15 backdrop-blur border border-white/20 p-1 grid grid-cols-4 gap-1">
           {RANGES.map((r) => (
             <button
               key={r.key}
@@ -67,10 +96,16 @@ function LeaderboardPage() {
 
         {/* List */}
         <div className="mt-5 flex-1 rounded-3xl bg-white shadow-fun p-4 animate-float-up">
-          <div className="text-sm font-bold text-muted-foreground mb-2 px-2">جميع المتصدرين</div>
+          <div className="text-sm font-bold text-muted-foreground mb-2 px-2">
+            {scope === "global" ? "المتصدرون عالمياً" : `المتصدرون في ${countryName(myCountry)}`}
+          </div>
           <div className="space-y-2">
             {entries.length === 0 && (
-              <p className="text-center text-muted-foreground py-8 font-semibold">لا توجد نتائج في هذه الفترة. كن أول اللاعبين!</p>
+              <p className="text-center text-muted-foreground py-8 font-semibold">
+                {scope === "country" && !myCountry
+                  ? "اختر دولتك من الملف الشخصي لتظهر لوحة دولتك."
+                  : "لا توجد نتائج في هذه الفترة. كن أول اللاعبين!"}
+              </p>
             )}
             {entries.map((e, i) => (
               <div key={i} className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 ${i < 3 ? "bg-gradient-card" : "bg-muted/50"}`}>
@@ -79,7 +114,9 @@ function LeaderboardPage() {
                 }`}>{i + 1}</div>
                 <div className="size-9 rounded-xl bg-white flex items-center justify-center text-xl shrink-0 shadow-card">{e.avatar ?? "🎮"}</div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-black text-foreground truncate">{e.name}</div>
+                  <div className="font-black text-foreground truncate">
+                    {e.name} <span>{countryFlag(e.country)}</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-1 font-black text-[color:var(--primary)]">
                   <Medal className="size-4 text-[color:var(--fun-3)]" />
@@ -110,7 +147,9 @@ function PodiumSpot({ rank, entry, height, tint, crown }: { rank: number; entry:
           {entry.avatar ?? entry.name[0]}
         </div>
       </div>
-      <div className="text-white text-sm font-black truncate max-w-full">{entry.name}</div>
+      <div className="text-white text-sm font-black truncate max-w-full">
+        {entry.name} {countryFlag(entry.country)}
+      </div>
       <div className="text-white/85 text-xs font-bold">{entry.score} نقطة</div>
       <div className={`mt-2 ${height} w-full rounded-t-2xl bg-white/95 flex items-start justify-center pt-2 font-black text-[color:var(--primary)] text-2xl shadow-card`}>
         {rank}
