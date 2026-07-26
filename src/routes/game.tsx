@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   loadPlayer,
   savePlayer,
@@ -14,7 +14,17 @@ import {
   type SkillKey,
   type Difficulty,
 } from "@/lib/quiz-data";
-import { Heart, Trophy, X, Check, Zap, Lock } from "lucide-react";
+import {
+  loadHearts,
+  spendHeart,
+  addHearts,
+  MAX_HEARTS,
+  msUntilNextHeart,
+  formatCountdown,
+} from "@/lib/hearts";
+import { sfxCorrect, sfxWrong, sfxTick, sfxLevelUp, sfxTap, primeAudio } from "@/lib/fx";
+import { RewardedAdButton, ModalShell } from "@/components/rewarded-ad";
+import { Heart, Trophy, X, Check, Zap, Lock, Clock, Settings } from "lucide-react";
 
 const TOTAL = 10;
 
@@ -36,17 +46,26 @@ export const Route = createFileRoute("/game")({
   component: GamePage,
 });
 
-type Phase = "picking" | "playing" | "reveal" | "done";
-
 function GamePage() {
   const navigate = useNavigate();
   const search = useSearch({ from: "/game" });
   const [player] = useState(() => loadPlayer());
   const [difficulty, setDifficulty] = useState<Difficulty | null>(search.difficulty ?? null);
-  const [phase, setPhase] = useState<Phase>(search.difficulty ? "playing" : "picking");
+  const [phase, setPhase] = useState<"picking" | "playing">(search.difficulty ? "playing" : "picking");
 
   if (phase === "picking") {
-    return <DifficultyPicker player={player} skill={search.skill} onPick={(d) => { setDifficulty(d); setPhase("playing"); }} />;
+    return (
+      <DifficultyPicker
+        player={player}
+        skill={search.skill}
+        onPick={(d) => {
+          primeAudio();
+          sfxTap();
+          setDifficulty(d);
+          setPhase("playing");
+        }}
+      />
+    );
   }
 
   return <PlaySession skill={search.skill} difficulty={difficulty!} onExit={() => navigate({ to: "/" })} />;
@@ -64,7 +83,9 @@ function DifficultyPicker({ player, skill, onPick }: { player: ReturnType<typeof
           <div className="rounded-full bg-white/15 backdrop-blur px-4 py-1.5 border border-white/20 text-sm font-bold">
             {skill ? SKILLS[skill].emoji + " " + SKILLS[skill].name : "التحدّي الكامل"}
           </div>
-          <div className="w-10" />
+          <Link to="/settings" className="rounded-full bg-white/15 backdrop-blur size-10 flex items-center justify-center border border-white/20" aria-label="الإعدادات">
+            <Settings className="size-5" />
+          </Link>
         </div>
 
         <div className="mt-6 text-center animate-pop">
@@ -116,10 +137,12 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
   const [score, setScore] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [wrong, setWrong] = useState(0);
-  const [lives, setLives] = useState(3);
+  const [hearts, setHearts] = useState(() => loadHearts().hearts);
   const [selected, setSelected] = useState<number | null>(null);
-  const [phase, setPhase] = useState<"playing" | "reveal">("playing");
+  const [phase, setPhase] = useState<"playing" | "reveal" | "blocked">("playing");
+  const [bonusTime, setBonusTime] = useState(0);
   const [timeLeft, setTimeLeft] = useState(timePerQ);
+  const [refillIn, setRefillIn] = useState(0);
   const [skillDelta, setSkillDelta] = useState<Record<SkillKey, { xp: number; score: number }>>({
     speed: { xp: 0, score: 0 }, logic: { xp: 0, score: 0 }, focus: { xp: 0, score: 0 }, math: { xp: 0, score: 0 }, memory: { xp: 0, score: 0 },
   });
@@ -128,10 +151,12 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
   const q = challenges[idx];
   const currentSkill: SkillKey = q?.skill ?? "speed";
   const skillInfo = SKILLS[currentSkill];
+  const questionTime = timePerQ + bonusTime;
+  const nearEnd = idx >= challenges.length - 3;
 
   useEffect(() => {
     if (phase !== "playing") return;
-    setTimeLeft(timePerQ);
+    setTimeLeft(questionTime);
     timerRef.current = setInterval(() => {
       setTimeLeft((t) => {
         if (t <= 1) {
@@ -139,12 +164,21 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
           handleAnswer(null);
           return 0;
         }
+        if (t <= 4) sfxTick();
         return t - 1;
       });
     }, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idx, phase]);
+  }, [idx, phase, questionTime]);
+
+  // Live countdown for the "wait for refill" hint.
+  useEffect(() => {
+    if (phase !== "blocked") return;
+    setRefillIn(msUntilNextHeart());
+    const t = setInterval(() => setRefillIn(msUntilNextHeart()), 1000);
+    return () => clearInterval(t);
+  }, [phase]);
 
   function handleAnswer(choice: number | null) {
     if (phase !== "playing") return;
@@ -154,8 +188,10 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
 
     const isRight = choice !== null && choice === q.correct;
     let gained = 0;
+    let heartsLeft = hearts;
     if (isRight) {
       gained = Math.round((10 + timeLeft * 3) * xpMult);
+      sfxCorrect();
       setScore((s) => s + gained);
       setCorrect((c) => c + 1);
       setSkillDelta((d) => ({
@@ -163,25 +199,46 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
         [currentSkill]: { xp: d[currentSkill].xp + Math.round(gained / 2), score: d[currentSkill].score + gained },
       }));
     } else {
+      sfxWrong();
       setWrong((w) => w + 1);
-      setLives((l) => l - 1);
+      heartsLeft = spendHeart();
+      setHearts(heartsLeft);
     }
 
     setTimeout(() => {
-      const nextLives = isRight ? lives : lives - 1;
       const nextIdx = idx + 1;
-      if (nextLives <= 0 || nextIdx >= challenges.length) {
-        finish(
-          score + gained,
-          correct + (isRight ? 1 : 0),
-          wrong + (isRight ? 0 : 1),
-        );
+      if (heartsLeft <= 0) {
+        // Out of hearts → offer rewarded ad / extra time / wait.
+        setPhase("blocked");
+        return;
+      }
+      if (nextIdx >= challenges.length) {
+        finish(score + gained, correct + (isRight ? 1 : 0), wrong + (isRight ? 0 : 1));
         return;
       }
       setIdx(nextIdx);
+      setBonusTime(0);
       setSelected(null);
       setPhase("playing");
     }, 1100);
+  }
+
+  function continueAfterAd(extraSeconds: number) {
+    setHearts(addHearts(1));
+    setBonusTime(extraSeconds);
+    setSelected(null);
+    if (extraSeconds > 0) {
+      // Retry the same question with extra time.
+      setPhase("playing");
+      return;
+    }
+    const nextIdx = idx + 1;
+    if (nextIdx >= challenges.length) {
+      finish(score, correct, wrong);
+      return;
+    }
+    setIdx(nextIdx);
+    setPhase("playing");
   }
 
   function finish(finalScore: number, finalCorrect: number, finalWrong: number) {
@@ -190,7 +247,6 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
     const newXp = p.xp + finalScore;
     const newLevel = levelFromXp(newXp);
 
-    // Skills merge
     const nextSkills = { ...p.skills };
     (Object.keys(skillDelta) as SkillKey[]).forEach((k) => {
       const cur = nextSkills[k];
@@ -213,6 +269,7 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
     const { player: withAch, unlocked } = grantAchievements(next);
     next = withAch;
     savePlayer(next);
+    if (next.level > p.level) sfxLevelUp();
 
     try {
       localStorage.setItem(
@@ -233,9 +290,9 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
     navigate({ to: "/results" });
   }
 
-  const progress = ((idx) / challenges.length) * 100;
-  const timerPct = (timeLeft / timePerQ) * 100;
-  const isDanger = timeLeft <= Math.ceil(timePerQ / 3);
+  const progress = (idx / challenges.length) * 100;
+  const timerPct = (timeLeft / questionTime) * 100;
+  const isDanger = timeLeft <= Math.ceil(questionTime / 3);
 
   return (
     <div className="min-h-screen px-4 pt-6 pb-8 flex flex-col">
@@ -251,7 +308,7 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
           </button>
           <div className="flex items-center gap-2">
             <Chip icon={<Trophy className="size-4" />} value={score} tint="fun-3" />
-            <Chip icon={<Heart className="size-4 fill-current" />} value={lives} tint="fun-1" />
+            <Chip icon={<Heart className="size-4 fill-current" />} value={hearts} tint="fun-1" />
           </div>
         </div>
 
@@ -280,6 +337,11 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
               {timeLeft}
             </div>
           </div>
+          {bonusTime > 0 && (
+            <div className="mt-2 text-white text-xs font-black inline-flex items-center gap-1">
+              <Clock className="size-3" /> +{bonusTime} ثوانٍ إضافية
+            </div>
+          )}
         </div>
 
         {/* Question card */}
@@ -295,13 +357,13 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
         <div className={`mt-4 grid gap-3 ${q.answers.length === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
           {q.answers.map((a, i) => {
             const isSelected = selected === i;
-            const isCorrect = phase === "reveal" && i === q.correct;
-            const isWrong = phase === "reveal" && isSelected && i !== q.correct;
+            const isCorrect = phase !== "playing" && i === q.correct;
+            const isWrong = phase !== "playing" && isSelected && i !== q.correct;
             const base = "w-full rounded-2xl px-4 py-4 text-right text-lg font-bold flex items-center justify-between transition-all";
             let cls = "bg-white text-foreground shadow-card active:translate-y-0.5";
             if (isCorrect) cls = "bg-gradient-success text-white shadow-fun animate-pop";
             else if (isWrong) cls = "bg-gradient-danger text-white shadow-fun animate-shake";
-            else if (phase === "reveal") cls = "bg-white/70 text-muted-foreground";
+            else if (phase !== "playing") cls = "bg-white/70 text-muted-foreground";
             const tints = ["fun-1", "fun-2", "fun-3", "fun-4"];
             const isTF = q.answers.length === 2;
             return (
@@ -311,9 +373,7 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
                 onClick={() => handleAnswer(i)}
                 className={`${base} ${cls} ${isTF ? "justify-center" : ""}`}
               >
-                {!isTF && (
-                  <span className="flex-1 text-right">{a}</span>
-                )}
+                {!isTF && <span className="flex-1 text-right">{a}</span>}
                 <span
                   className={`${isTF ? "flex-1 text-center" : ""} ${!isTF ? "size-9 rounded-xl flex items-center justify-center text-white font-black shrink-0" : "font-black text-xl"} ${
                     !isTF ? (isCorrect || isWrong ? "bg-white/25" : `bg-[color:var(--${tints[i]})]`) : ""
@@ -332,6 +392,36 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
           </div>
         )}
       </div>
+
+      {/* Out-of-hearts modal */}
+      {phase === "blocked" && (
+        <ModalShell
+          emoji="💔"
+          title="نفدت القلوب!"
+          subtitle={`الحد الأقصى ${MAX_HEARTS} قلوب — يُعاد قلب واحد كل ٢٠ دقيقة`}
+        >
+          <RewardedAdButton
+            label="شاهد إعلاناً واحصل على ❤️ +1"
+            onReward={() => continueAfterAd(0)}
+          />
+          {nearEnd && (
+            <RewardedAdButton
+              label="استمر مع ٥ ثوانٍ إضافية ⏱️"
+              onReward={() => continueAfterAd(5)}
+            />
+          )}
+          <div className="rounded-2xl bg-[color:var(--muted)] p-4">
+            <div className="text-sm font-bold text-muted-foreground">انتظار التعبئة</div>
+            <div className="text-2xl font-black text-foreground tabular-nums">{formatCountdown(refillIn)}</div>
+          </div>
+          <button
+            onClick={() => finish(score, correct, wrong)}
+            className="w-full rounded-2xl border-2 border-[color:var(--border)] px-4 py-3 font-black text-foreground active:translate-y-0.5 transition"
+          >
+            إنهاء وعرض النتيجة
+          </button>
+        </ModalShell>
+      )}
     </div>
   );
 }
