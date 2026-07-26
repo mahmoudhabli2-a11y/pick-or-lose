@@ -8,9 +8,9 @@ import { ChevronRight, Volume2, VolumeX, Vibrate, Heart } from "lucide-react";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "الإعدادات — تحدّي" },
-      { name: "description", content: "تحكّم في المؤثرات الصوتية والاهتزاز وقلوب اللعب في تحدّي." },
-      { property: "og:title", content: "الإعدادات — تحدّي" },
+      { title: "الإعدادات — تحدي العقول" },
+      { name: "description", content: "تحكّم في المؤثرات الصوتية والاهتزاز وقلوب اللعب في تحدي العقول." },
+      { property: "og:title", content: "الإعدادات — تحدي العقول" },
       { property: "og:description", content: "تشغيل أو إيقاف الصوت والاهتزاز وإدارة القلوب." },
     ],
   }),

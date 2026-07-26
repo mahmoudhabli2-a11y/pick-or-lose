@@ -208,6 +208,7 @@ export type SkillState = { xp: number; level: number; score: number };
 export type PlayerState = {
   name: string;
   avatar: string;
+  country: string | null;
   xp: number;
   level: number;
   score: number;
@@ -236,6 +237,7 @@ function defaultPlayer(): PlayerState {
   return {
     name: "لاعب",
     avatar: "🦊",
+    country: null,
     xp: 0,
     level: 1,
     score: 0,
@@ -292,7 +294,7 @@ export function grantAchievements(p: PlayerState): { player: PlayerState; unlock
 }
 
 // ---------- Leaderboard ----------
-export type LBEntry = { name: string; score: number; date: number; avatar?: string };
+export type LBEntry = { name: string; score: number; date: number; avatar?: string; country?: string | null };
 export type LBRange = "daily" | "weekly" | "monthly" | "all";
 
 export function loadLeaderboard(): LBEntry[] {
@@ -303,14 +305,14 @@ export function loadLeaderboard(): LBEntry[] {
   } catch {}
   const now = Date.now();
   const seed: LBEntry[] = [
-    { name: "أحمد",  score: 780, date: now - 1 * 86400000, avatar: "🦁" },
-    { name: "فاطمة", score: 650, date: now - 2 * 86400000, avatar: "🦄" },
-    { name: "خالد",  score: 540, date: now - 3 * 86400000, avatar: "🐯" },
-    { name: "ليلى",  score: 430, date: now - 6 * 86400000, avatar: "🐨" },
-    { name: "يوسف",  score: 380, date: now - 8 * 86400000, avatar: "🦉" },
-    { name: "سارة",  score: 320, date: now - 12 * 86400000, avatar: "🐼" },
-    { name: "عمر",   score: 280, date: now - 20 * 86400000, avatar: "🦊" },
-    { name: "منى",   score: 210, date: now - 40 * 86400000, avatar: "🐸" },
+    { name: "أحمد",  score: 780, date: now - 1 * 86400000, avatar: "🦁", country: "EG" },
+    { name: "فاطمة", score: 650, date: now - 2 * 86400000, avatar: "🦄", country: "SA" },
+    { name: "خالد",  score: 540, date: now - 3 * 86400000, avatar: "🐯", country: "AE" },
+    { name: "ليلى",  score: 430, date: now - 6 * 86400000, avatar: "🐨", country: "LB" },
+    { name: "يوسف",  score: 380, date: now - 8 * 86400000, avatar: "🦉", country: "JO" },
+    { name: "سارة",  score: 320, date: now - 12 * 86400000, avatar: "🐼", country: "KW" },
+    { name: "عمر",   score: 280, date: now - 20 * 86400000, avatar: "🦊", country: "MA" },
+    { name: "منى",   score: 210, date: now - 40 * 86400000, avatar: "🐸", country: "QA" },
   ];
   try { localStorage.setItem(LB_KEY, JSON.stringify(seed)); } catch {}
   return seed;
@@ -320,9 +322,9 @@ export function saveLeaderboard(entries: LBEntry[]) {
   try { localStorage.setItem(LB_KEY, JSON.stringify(entries.slice(0, 50))); } catch {}
 }
 
-export function addLeaderboardEntry(name: string, score: number, avatar?: string) {
+export function addLeaderboardEntry(name: string, score: number, avatar?: string, country?: string | null) {
   const list = loadLeaderboard();
-  list.push({ name: name || "لاعب", score, date: Date.now(), avatar });
+  list.push({ name: name || "لاعب", score, date: Date.now(), avatar, country });
   list.sort((a, b) => b.score - a.score);
   saveLeaderboard(list.slice(0, 50));
 }

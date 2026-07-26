@@ -7,9 +7,9 @@ import { LogIn, UserPlus, Play, Trophy } from "lucide-react";
 export const Route = createFileRoute("/welcome")({
   head: () => ({
     meta: [
-      { title: "أهلاً بك في تحدّي" },
-      { name: "description", content: "سجّل دخول أو أنشئ حساباً أو ادخل كضيف لبدء اللعب في تحدّي." },
-      { property: "og:title", content: "أهلاً بك في تحدّي" },
+      { title: "أهلاً بك في تحدي العقول" },
+      { name: "description", content: "سجّل دخول أو أنشئ حساباً أو ادخل كضيف لبدء اللعب في تحدي العقول." },
+      { property: "og:title", content: "أهلاً بك في تحدي العقول" },
       { property: "og:description", content: "منصة تحديات ذهنية عربية — طوّر عقلك يومياً." },
     ],
   }),

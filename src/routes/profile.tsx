@@ -13,14 +13,18 @@ import {
   type SkillKey,
 } from "@/lib/quiz-data";
 import { ArrowRight, Flame, Trophy, Zap, Check, Pencil, Award } from "lucide-react";
+import { CountryPicker } from "@/components/country-picker";
+import { countryFlag, countryName } from "@/lib/countries";
+import { ShareRankButton } from "@/components/share-rank";
+import { buildShareText } from "@/lib/share";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "الملف الشخصي — تحدّي" },
+      { title: "الملف الشخصي — تحدي العقول" },
       { name: "description", content: "ملفك الشخصي: المستوى، النقاط، المهارات، الإنجازات، والسلسلة اليومية." },
-      { property: "og:title", content: "الملف الشخصي — تحدّي" },
-      { property: "og:description", content: "تابع تقدمك وإنجازاتك في تحدّي." },
+      { property: "og:title", content: "الملف الشخصي — تحدي العقول" },
+      { property: "og:description", content: "تابع تقدمك وإنجازاتك في تحدي العقول." },
     ],
   }),
   component: ProfilePage,
@@ -31,18 +35,20 @@ function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("🦊");
+  const [country, setCountry] = useState<string | null>(null);
 
   useEffect(() => {
     const pl = loadPlayer();
     setP(pl);
     setName(pl.name);
     setAvatar(pl.avatar);
+    setCountry(pl.country ?? null);
   }, []);
 
   if (!p) return null;
 
   function save() {
-    const next = { ...p!, name: name.trim() || "لاعب", avatar };
+    const next = { ...p!, name: name.trim() || "لاعب", avatar, country };
     savePlayer(next);
     setP(next);
     setEditing(false);
@@ -81,8 +87,11 @@ function ProfilePage() {
                   maxLength={16}
                 />
               ) : (
-                <div className="font-black text-2xl text-foreground truncate">{p.name}</div>
+                <div className="font-black text-2xl text-foreground truncate">
+                  {p.name} <span className="align-middle">{countryFlag(p.country)}</span>
+                </div>
               )}
+              <div className="mt-1 text-xs font-bold text-muted-foreground">{countryName(p.country)}</div>
               <div className="mt-1 flex items-center gap-2 text-xs font-bold text-muted-foreground">
                 <span className="inline-flex items-center gap-1 text-[color:var(--fun-3)]"><Trophy className="size-3.5" />{p.bestScore}</span>
                 <span className="inline-flex items-center gap-1 text-[color:var(--destructive)]"><Flame className="size-3.5" />{p.streak} يوم</span>
@@ -102,6 +111,8 @@ function ProfilePage() {
                   >{a}</button>
                 ))}
               </div>
+              <div className="text-xs font-bold text-muted-foreground mt-4 mb-2">اختر دولتك</div>
+              <CountryPicker value={country} onChange={setCountry} />
               <button onClick={save} className="mt-3 w-full rounded-2xl bg-gradient-primary text-white py-3 font-black shadow-card">حفظ</button>
             </div>
           )}
@@ -149,6 +160,19 @@ function ProfilePage() {
               );
             })}
           </div>
+        </div>
+
+        {/* Share */}
+        <div className="rounded-3xl bg-white shadow-card p-4 animate-float-up">
+          <div className="font-black text-foreground mb-2">شارك تقدمك</div>
+          <ShareRankButton
+            text={buildShareText({
+              name: p.name,
+              score: p.bestScore,
+              level: p.level,
+              flag: countryFlag(p.country),
+            })}
+          />
         </div>
 
         {/* Achievements */}

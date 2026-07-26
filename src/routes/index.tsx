@@ -14,14 +14,16 @@ import {
 } from "@/lib/quiz-data";
 import { useAuth, isGuest, signOut } from "@/lib/auth";
 import { loadHearts, MAX_HEARTS } from "@/lib/hearts";
+import { countryFlag } from "@/lib/countries";
+import { DailyWheel, wheelAvailable } from "@/components/daily-wheel";
 import { Trophy, Zap, Calendar, Play, Flame, ChevronLeft, Award, User, LogOut, LogIn, Heart, Settings } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "تحدّي — 🏆 تحدّى عقلك" },
-      { name: "description", content: "تحدّي: منصة تحديات ذهنية عربية. طوّر سرعتك ومنطقك وذاكرتك يومياً." },
-      { property: "og:title", content: "تحدّي — 🏆 تحدّى عقلك" },
+      { title: "تحدي العقول — 🏆 تحدّى عقلك" },
+      { name: "description", content: "تحدي العقول: منصة تحديات ذهنية عربية. طوّر سرعتك ومنطقك وذاكرتك يومياً." },
+      { property: "og:title", content: "تحدي العقول — 🏆 تحدّى عقلك" },
       { property: "og:description", content: "لعبة تحديات ذهنية عربية بمهارات متعددة، مستويات، وإنجازات." },
     ],
   }),
@@ -31,6 +33,7 @@ export const Route = createFileRoute("/")({
 function Home() {
   const [player, setPlayer] = useState<PlayerState | null>(null);
   const [hearts, setHearts] = useState(MAX_HEARTS);
+  const [showWheel, setShowWheel] = useState(false);
   const { session, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -55,6 +58,12 @@ function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!player) return;
+    const t = setTimeout(() => setShowWheel(wheelAvailable()), 700);
+    return () => clearTimeout(t);
+  }, [player]);
+
   const p = player;
 
 
@@ -69,7 +78,9 @@ function Home() {
             </div>
             <div className="text-white">
               <div className="text-xs font-bold opacity-85">مرحباً</div>
-              <div className="font-black text-base leading-tight">{p?.name ?? "لاعب"}</div>
+              <div className="font-black text-base leading-tight">
+                {p?.name ?? "لاعب"} {countryFlag(p?.country)}
+              </div>
             </div>
           </Link>
           <div className="flex items-center gap-2">
@@ -114,7 +125,7 @@ function Home() {
           <div className="inline-block rounded-3xl bg-white/15 backdrop-blur-sm px-5 py-1.5 mb-2 border border-white/20">
             <span className="text-white/95 text-xs font-bold tracking-wider">🏆 تحدّى عقلك</span>
           </div>
-          <h1 className="text-6xl font-black text-white leading-none drop-shadow-lg">تحدّي</h1>
+          <h1 className="text-5xl font-black text-white leading-none drop-shadow-lg">تحدي العقول</h1>
         </div>
 
         {/* Level & XP */}
@@ -159,6 +170,16 @@ function Home() {
           icon={<Trophy className="size-6" />}
           gradient="bg-gradient-primary"
         />
+
+        {showWheel && (
+          <DailyWheel
+            onClose={() => {
+              setShowWheel(false);
+              setPlayer(loadPlayer());
+              setHearts(loadHearts().hearts);
+            }}
+          />
+        )}
 
         {/* Achievements strip */}
         <AchievementStrip owned={p?.achievements ?? []} />

@@ -3,6 +3,8 @@ import { useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { setGuest } from "@/lib/auth";
+import { CountryPicker } from "@/components/country-picker";
+import { loadPlayer, savePlayer } from "@/lib/quiz-data";
 import { ArrowRight, Mail, Lock, User, Loader2 } from "lucide-react";
 
 type AuthSearch = { mode?: "signin" | "signup" };
@@ -13,8 +15,8 @@ export const Route = createFileRoute("/auth")({
   }),
   head: () => ({
     meta: [
-      { title: "تسجيل الدخول — تحدّي" },
-      { name: "description", content: "سجّل الدخول أو أنشئ حساباً في تحدّي لحفظ تقدمك." },
+      { title: "تسجيل الدخول — تحدي العقول" },
+      { name: "description", content: "سجّل الدخول أو أنشئ حساباً في تحدي العقول لحفظ تقدمك." },
     ],
   }),
   component: AuthPage,
@@ -31,6 +33,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [country, setCountry] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -46,6 +49,7 @@ function AuthPage() {
     if (isSignup) {
       const nameR = nameSchema.safeParse(name);
       if (!nameR.success) return setError(nameR.error.issues[0].message);
+      if (!country) return setError("اختر دولتك");
     }
     setLoading(true);
     try {
@@ -59,6 +63,8 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+        const pl = loadPlayer();
+        savePlayer({ ...pl, name: name.trim() || pl.name, country });
         if (data.session) {
           setGuest(false);
           navigate({ to: "/", replace: true });
@@ -109,6 +115,12 @@ function AuthPage() {
                 onChange={setName}
                 type="text"
               />
+            )}
+            {isSignup && (
+              <div className="rounded-2xl border-2 border-[color:var(--border)] p-3">
+                <div className="text-xs font-bold text-muted-foreground mb-2 text-right">اختر دولتك</div>
+                <CountryPicker value={country} onChange={setCountry} />
+              </div>
             )}
             <Field
               icon={<Mail className="size-4" />}

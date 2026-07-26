@@ -37,9 +37,9 @@ export const Route = createFileRoute("/game")({
   }),
   head: () => ({
     meta: [
-      { title: "التحدّي — تحدّي" },
+      { title: "التحدّي — تحدي العقول" },
       { name: "description", content: "تحديات ذهنية سريعة. أجب قبل انتهاء الوقت واحصل على نقاط أعلى بسرعتك." },
-      { property: "og:title", content: "التحدّي — تحدّي" },
+      { property: "og:title", content: "التحدّي — تحدي العقول" },
       { property: "og:description", content: "أجب بسرعة، اجمع النقاط، وطوّر مهاراتك." },
     ],
   }),
