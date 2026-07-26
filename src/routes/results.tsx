@@ -23,6 +23,7 @@ function ResultsPage() {
   const [result, setResult] = useState<Result | null>(null);
   const [name, setName] = useState("");
   const [saved, setSaved] = useState(false);
+  const [doubled, setDoubled] = useState(false);
 
   useEffect(() => {
     try {
@@ -52,6 +53,32 @@ function ResultsPage() {
   function saveScore() {
     addLeaderboardEntry(name.trim() || "لاعب", result!.score);
     setSaved(true);
+  }
+
+  /** Rewarded ad → doubles the XP/points earned this round. */
+  function doubleReward() {
+    const bonus = result!.score;
+    const p = loadPlayer();
+    const xp = p.xp + bonus;
+    savePlayer({
+      ...p,
+      xp,
+      level: Math.max(p.level, levelFromXp(xp)),
+      score: p.score + bonus,
+      bestScore: Math.max(p.bestScore, result!.score * 2),
+    });
+    setResult({ ...result!, score: result!.score * 2 });
+    try {
+      const raw = localStorage.getItem("tahaddi-last-game");
+      if (raw) {
+        const obj = JSON.parse(raw);
+        localStorage.setItem(
+          "tahaddi-last-game",
+          JSON.stringify({ ...obj, score: result!.score * 2, xpGained: result!.score * 2 }),
+        );
+      }
+    } catch {}
+    setDoubled(true);
   }
 
   return (
