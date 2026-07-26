@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { addLeaderboardEntry } from "@/lib/quiz-data";
-import { RotateCw, Home, Trophy, Check, X, Save } from "lucide-react";
+import { addLeaderboardEntry, loadPlayer, savePlayer, levelFromXp } from "@/lib/quiz-data";
+import { RewardedAdButton } from "@/components/rewarded-ad";
+import { RotateCw, Home, Trophy, Check, X, Save, Sparkles } from "lucide-react";
 
 type Result = { score: number; correct: number; wrong: number; total: number };
 
