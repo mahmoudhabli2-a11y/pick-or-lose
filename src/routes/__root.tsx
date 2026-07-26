@@ -77,9 +77,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1" },
-      { title: "تحدّي — 🏆 تحدّى عقلك" },
-      { name: "description", content: "تحدّي: لعبة عربية لتحدّي العقل والمهارة. أجب خلال 5 ثوانٍ، اجمع النقاط، وتصدَّر." },
-      { property: "og:title", content: "تحدّي — 🏆 تحدّى عقلك" },
+      { title: "تحدي العقول — 🏆 تحدّى عقلك" },
+      { name: "description", content: "تحدي العقول: لعبة عربية لتحدّي العقل والمهارة. أجب خلال 5 ثوانٍ، اجمع النقاط، وتصدَّر." },
+      { property: "og:title", content: "تحدي العقول — 🏆 تحدّى عقلك" },
       { property: "og:description", content: "لعبة تحدّي العقل والمهارة بالعربية مع تحديات يومية ولوحة متصدرين." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

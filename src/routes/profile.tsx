@@ -17,10 +17,10 @@ import { ArrowRight, Flame, Trophy, Zap, Check, Pencil, Award } from "lucide-rea
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "الملف الشخصي — تحدّي" },
+      { title: "الملف الشخصي — تحدي العقول" },
       { name: "description", content: "ملفك الشخصي: المستوى، النقاط، المهارات، الإنجازات، والسلسلة اليومية." },
-      { property: "og:title", content: "الملف الشخصي — تحدّي" },
-      { property: "og:description", content: "تابع تقدمك وإنجازاتك في تحدّي." },
+      { property: "og:title", content: "الملف الشخصي — تحدي العقول" },
+      { property: "og:description", content: "تابع تقدمك وإنجازاتك في تحدي العقول." },
     ],
   }),
   component: ProfilePage,

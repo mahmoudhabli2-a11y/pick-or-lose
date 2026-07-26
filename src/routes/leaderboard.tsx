@@ -6,9 +6,9 @@ import { Trophy, ArrowRight, Medal, Crown } from "lucide-react";
 export const Route = createFileRoute("/leaderboard")({
   head: () => ({
     meta: [
-      { title: "المتصدرون — تحدّي" },
+      { title: "المتصدرون — تحدي العقول" },
       { name: "description", content: "لوحة متصدرين يومية وأسبوعية وشهرية وعلى الإطلاق." },
-      { property: "og:title", content: "المتصدرون — تحدّي" },
+      { property: "og:title", content: "المتصدرون — تحدي العقول" },
       { property: "og:description", content: "شاهد أفضل اللاعبين وتصدَّر القائمة." },
     ],
   }),

@@ -13,8 +13,8 @@ export const Route = createFileRoute("/auth")({
   }),
   head: () => ({
     meta: [
-      { title: "تسجيل الدخول — تحدّي" },
-      { name: "description", content: "سجّل الدخول أو أنشئ حساباً في تحدّي لحفظ تقدمك." },
+      { title: "تسجيل الدخول — تحدي العقول" },
+      { name: "description", content: "سجّل الدخول أو أنشئ حساباً في تحدي العقول لحفظ تقدمك." },
     ],
   }),
   component: AuthPage,

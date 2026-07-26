@@ -19,9 +19,9 @@ import { Trophy, Zap, Calendar, Play, Flame, ChevronLeft, Award, User, LogOut, L
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "تحدّي — 🏆 تحدّى عقلك" },
-      { name: "description", content: "تحدّي: منصة تحديات ذهنية عربية. طوّر سرعتك ومنطقك وذاكرتك يومياً." },
-      { property: "og:title", content: "تحدّي — 🏆 تحدّى عقلك" },
+      { title: "تحدي العقول — 🏆 تحدّى عقلك" },
+      { name: "description", content: "تحدي العقول: منصة تحديات ذهنية عربية. طوّر سرعتك ومنطقك وذاكرتك يومياً." },
+      { property: "og:title", content: "تحدي العقول — 🏆 تحدّى عقلك" },
       { property: "og:description", content: "لعبة تحديات ذهنية عربية بمهارات متعددة، مستويات، وإنجازات." },
     ],
   }),

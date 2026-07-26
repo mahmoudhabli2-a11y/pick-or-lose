@@ -9,9 +9,9 @@ type Result = { score: number; correct: number; wrong: number; total: number };
 export const Route = createFileRoute("/results")({
   head: () => ({
     meta: [
-      { title: "النتيجة — تحدّي" },
+      { title: "النتيجة — تحدي العقول" },
       { name: "description", content: "نتيجتك النهائية: نقاط، إجابات صحيحة وخاطئة." },
-      { property: "og:title", content: "النتيجة — تحدّي" },
+      { property: "og:title", content: "النتيجة — تحدي العقول" },
       { property: "og:description", content: "نتيجتك بعد التحدي." },
     ],
   }),
