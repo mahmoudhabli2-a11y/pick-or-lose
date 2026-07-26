@@ -2,6 +2,8 @@
 // تحدّي — game data & state
 // ============================================================
 
+import { EXTRA_CHALLENGES } from "./challenges-extra";
+
 export type SkillKey = "speed" | "logic" | "focus" | "math" | "memory";
 
 export const SKILLS: Record<SkillKey, { name: string; emoji: string; tint: string; desc: string }> = {
@@ -37,8 +39,8 @@ export type Challenge = {
   hint?: string;
 };
 
-// ---------- 100+ challenges ----------
-export const CHALLENGES: Challenge[] = [
+// ---------- core challenges ----------
+const CORE_CHALLENGES: Challenge[] = [
   // Speed / Reaction
   { id: 1,  skill: "speed", type: "reaction", question: "بسرعة! أي رقم أكبر؟", answers: ["47", "74"], correct: 1 },
   { id: 2,  skill: "speed", type: "reaction", question: "أيّهما أخف: ريشة أم حجر؟", answers: ["ريشة", "حجر"], correct: 0 },
@@ -127,6 +129,9 @@ export const CHALLENGES: Challenge[] = [
   { id: 110, skill: "speed", type: "mcq", question: "أكبر كوكب في المجموعة الشمسية؟", answers: ["الأرض", "المشتري", "زحل", "المريخ"], correct: 1 },
   { id: 111, skill: "logic", type: "mcq", question: "من كتب البخلاء؟", answers: ["المتنبي", "الجاحظ", "طه حسين", "المعري"], correct: 1 },
 ];
+
+/** Full bank: core + extra (300+ challenges). */
+export const CHALLENGES: Challenge[] = [...CORE_CHALLENGES, ...EXTRA_CHALLENGES];
 
 // ---------- Daily challenges ----------
 export const DAILY_CHALLENGES: Challenge[] = [

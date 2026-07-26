@@ -13,7 +13,8 @@ import {
   ACHIEVEMENTS,
 } from "@/lib/quiz-data";
 import { useAuth, isGuest, signOut } from "@/lib/auth";
-import { Trophy, Zap, Calendar, Play, Flame, ChevronLeft, Award, User, LogOut, LogIn } from "lucide-react";
+import { loadHearts, MAX_HEARTS } from "@/lib/hearts";
+import { Trophy, Zap, Calendar, Play, Flame, ChevronLeft, Award, User, LogOut, LogIn, Heart, Settings } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const [player, setPlayer] = useState<PlayerState | null>(null);
+  const [hearts, setHearts] = useState(MAX_HEARTS);
   const { session, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -41,6 +43,17 @@ function Home() {
     }
     setPlayer(loadPlayer());
   }, [session, loading, navigate]);
+
+  useEffect(() => {
+    setHearts(loadHearts().hearts);
+    const t = setInterval(() => setHearts(loadHearts().hearts), 5000);
+    const onHearts = () => setHearts(loadHearts().hearts);
+    window.addEventListener("tahaddi-hearts", onHearts);
+    return () => {
+      clearInterval(t);
+      window.removeEventListener("tahaddi-hearts", onHearts);
+    };
+  }, []);
 
   const p = player;
 
@@ -64,6 +77,13 @@ function Home() {
               <Flame className="size-4 text-[color:var(--fun-3)]" />
               <span className="text-sm font-black">{p?.streak ?? 0}</span>
             </div>
+            <div className="rounded-full bg-white/15 backdrop-blur px-3 py-1.5 flex items-center gap-1 border border-white/20 text-white">
+              <Heart className="size-4 fill-[color:var(--fun-1)] text-[color:var(--fun-1)]" />
+              <span className="text-sm font-black">{hearts}</span>
+            </div>
+            <Link to="/settings" className="size-10 rounded-full bg-white/15 backdrop-blur border border-white/20 flex items-center justify-center text-white" aria-label="الإعدادات">
+              <Settings className="size-5" />
+            </Link>
             <Link to="/profile" className="size-10 rounded-full bg-white/15 backdrop-blur border border-white/20 flex items-center justify-center text-white" aria-label="الملف">
               <User className="size-5" />
             </Link>

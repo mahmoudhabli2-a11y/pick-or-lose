@@ -1,6 +1,6 @@
 /* Tahaddi service worker — minimal offline shell for PWABuilder.
    Uses NetworkFirst for HTML navigations, CacheFirst for static assets. */
-const VERSION = "tahaddi-v1";
+const VERSION = "tahaddi-v2";
 const STATIC_CACHE = `${VERSION}-static`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const PRECACHE_URLS = [

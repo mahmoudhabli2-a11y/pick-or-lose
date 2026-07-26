@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { addLeaderboardEntry } from "@/lib/quiz-data";
-import { RotateCw, Home, Trophy, Check, X, Save } from "lucide-react";
+import { addLeaderboardEntry, loadPlayer, savePlayer, levelFromXp } from "@/lib/quiz-data";
+import { RewardedAdButton } from "@/components/rewarded-ad";
+import { RotateCw, Home, Trophy, Check, X, Save, Sparkles } from "lucide-react";
 
 type Result = { score: number; correct: number; wrong: number; total: number };
 
@@ -22,6 +23,7 @@ function ResultsPage() {
   const [result, setResult] = useState<Result | null>(null);
   const [name, setName] = useState("");
   const [saved, setSaved] = useState(false);
+  const [doubled, setDoubled] = useState(false);
 
   useEffect(() => {
     try {
@@ -53,6 +55,32 @@ function ResultsPage() {
     setSaved(true);
   }
 
+  /** Rewarded ad → doubles the XP/points earned this round. */
+  function doubleReward() {
+    const bonus = result!.score;
+    const p = loadPlayer();
+    const xp = p.xp + bonus;
+    savePlayer({
+      ...p,
+      xp,
+      level: Math.max(p.level, levelFromXp(xp)),
+      score: p.score + bonus,
+      bestScore: Math.max(p.bestScore, result!.score * 2),
+    });
+    setResult({ ...result!, score: result!.score * 2 });
+    try {
+      const raw = localStorage.getItem("tahaddi-last-game");
+      if (raw) {
+        const obj = JSON.parse(raw);
+        localStorage.setItem(
+          "tahaddi-last-game",
+          JSON.stringify({ ...obj, score: result!.score * 2, xpGained: result!.score * 2 }),
+        );
+      }
+    } catch {}
+    setDoubled(true);
+  }
+
   return (
     <div className="min-h-screen px-5 pt-8 pb-8 flex flex-col">
       <div className="mx-auto w-full max-w-md flex-1 flex flex-col">
@@ -76,6 +104,16 @@ function ResultsPage() {
           <div className="mt-5 grid grid-cols-2 gap-3">
             <StatBox tone="success" icon={<Check className="size-5" />} label="صحيحة" value={result.correct} />
             <StatBox tone="danger" icon={<X className="size-5" />} label="خاطئة" value={result.wrong} />
+          </div>
+
+          <div className="mt-5">
+            {doubled ? (
+              <div className="rounded-2xl bg-gradient-success text-white px-4 py-3 font-black text-center inline-flex w-full items-center justify-center gap-2">
+                <Sparkles className="size-5" /> تم مضاعفة النقاط ×٢
+              </div>
+            ) : (
+              <RewardedAdButton label="شاهد إعلاناً وضاعف النقاط ×٢" onReward={doubleReward} />
+            )}
           </div>
         </div>
 
