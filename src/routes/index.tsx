@@ -13,6 +13,7 @@ import {
   ACHIEVEMENTS,
 } from "@/lib/quiz-data";
 import { useAuth, isGuest, signOut } from "@/lib/auth";
+import { loadHearts, MAX_HEARTS } from "@/lib/hearts";
 import { Trophy, Zap, Calendar, Play, Flame, ChevronLeft, Award, User, LogOut, LogIn, Heart, Settings } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const [player, setPlayer] = useState<PlayerState | null>(null);
+  const [hearts, setHearts] = useState(MAX_HEARTS);
   const { session, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -41,6 +43,17 @@ function Home() {
     }
     setPlayer(loadPlayer());
   }, [session, loading, navigate]);
+
+  useEffect(() => {
+    setHearts(loadHearts().hearts);
+    const t = setInterval(() => setHearts(loadHearts().hearts), 5000);
+    const onHearts = () => setHearts(loadHearts().hearts);
+    window.addEventListener("tahaddi-hearts", onHearts);
+    return () => {
+      clearInterval(t);
+      window.removeEventListener("tahaddi-hearts", onHearts);
+    };
+  }, []);
 
   const p = player;
 
