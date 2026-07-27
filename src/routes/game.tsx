@@ -223,9 +223,39 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
       setIdx(nextIdx);
       setBonusTime(0);
       setSelected(null);
+      setHidden([]);
+      setHintOpen(false);
       setPhase("playing");
     }, 1100);
   }
+
+  /** ٥٠/٥٠ — إخفاء إجابتين خاطئتين. */
+  function useFifty() {
+    if (powerups.fifty <= 0 || phase !== "playing") return;
+    const wrongIdx = q.answers.map((_, i) => i).filter((i) => i !== q.correct);
+    const shuffled = wrongIdx.sort(() => Math.random() - 0.5).slice(0, Math.min(2, wrongIdx.length - (q.answers.length > 3 ? 0 : 0)));
+    setHidden(shuffled);
+    setPowerups((p) => ({ ...p, fifty: p.fifty - 1 }));
+    sfxTap();
+  }
+
+  /** وقت إضافي ١٠ ثوانٍ. */
+  function useExtraTime() {
+    if (powerups.time <= 0 || phase !== "playing") return;
+    setBonusTime((b) => b + 10);
+    setTimeLeft((t) => t + 10);
+    setPowerups((p) => ({ ...p, time: p.time - 1 }));
+    sfxReward();
+  }
+
+  /** تلميح أو تصويت الجمهور. */
+  function useHint() {
+    if (powerups.hint <= 0 || phase !== "playing") return;
+    setHintOpen(true);
+    setPowerups((p) => ({ ...p, hint: p.hint - 1 }));
+    sfxTap();
+  }
+
 
   function continueAfterAd(extraSeconds: number) {
     setHearts(addHearts(1));
