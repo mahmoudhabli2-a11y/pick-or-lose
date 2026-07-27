@@ -133,7 +133,7 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
   const timePerQ = DIFFICULTIES[difficulty].time;
   const xpMult = DIFFICULTIES[difficulty].xp;
 
-  const [challenges] = useState<Challenge[]>(() => pickChallenges(TOTAL, skill));
+  const [challenges] = useState<Challenge[]>(() => pickChallenges(TOTAL, skill, difficulty));
   const [idx, setIdx] = useState(0);
   const [score, setScore] = useState(0);
   const [correct, setCorrect] = useState(0);

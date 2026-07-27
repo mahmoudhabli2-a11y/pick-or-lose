@@ -3,6 +3,8 @@
 // ============================================================
 
 import { EXTRA_CHALLENGES } from "./challenges-extra";
+import { EASY_CHALLENGES, HARD_CHALLENGES } from "./challenges-tiers";
+import { inferTier, tierMixForDifficulty, type Tier } from "./difficulty";
 
 export type SkillKey = "speed" | "logic" | "focus" | "math" | "memory";
 
@@ -37,6 +39,8 @@ export type Challenge = {
   answers: string[];
   correct: number;
   hint?: string;
+  /** تصنيف صعوبة اختياري؛ إن غاب يُستنتج تلقائياً. */
+  tier?: "easy" | "medium" | "hard";
 };
 
 // ---------- core challenges ----------
@@ -131,7 +135,7 @@ const CORE_CHALLENGES: Challenge[] = [
 ];
 
 /** Full bank: core + extra (300+ challenges). */
-export const CHALLENGES: Challenge[] = [...CORE_CHALLENGES, ...EXTRA_CHALLENGES];
+export const CHALLENGES: Challenge[] = [...CORE_CHALLENGES, ...EXTRA_CHALLENGES, ...EASY_CHALLENGES, ...HARD_CHALLENGES];
 
 // ---------- Daily challenges ----------
 export const DAILY_CHALLENGES: Challenge[] = [
@@ -156,11 +160,44 @@ export function secondsUntilNextDaily(): number {
   return Math.max(0, Math.floor((+next - +now) / 1000));
 }
 
-export function pickChallenges(n: number, skill?: SkillKey): Challenge[] {
-  const pool = skill ? CHALLENGES.filter((c) => c.skill === skill) : CHALLENGES;
-  const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, Math.min(n, shuffled.length));
+/**
+ * يختار أسئلة مناسبة لمستوى الصعوبة:
+ * المبتدئ يحصل على الأسهل فقط، والتحدّي على الأصعب.
+ */
+export function pickChallenges(n: number, skill?: SkillKey, difficulty?: Difficulty): Challenge[] {
+  const base = skill ? CHALLENGES.filter((c) => c.skill === skill) : CHALLENGES;
+  const shuffle = (arr: Challenge[]) => [...arr].sort(() => Math.random() - 0.5);
+
+  if (!difficulty) return shuffle(base).slice(0, Math.min(n, base.length));
+
+  const mix = tierMixForDifficulty(difficulty); // نِسَب كل طبقة
+  const out: Challenge[] = [];
+  const taken = new Set<number>();
+  const byTier = (t: Tier) => shuffle(base.filter((c) => inferTier(c) === t && !taken.has(c.id)));
+  for (const [tier, share] of mix) {
+    const want = Math.round(n * share);
+    for (const c of byTier(tier).slice(0, want)) {
+      out.push(c);
+      taken.add(c.id);
+    }
+  }
+  // أكمل من الطبقات المفضّلة إن نقص العدد.
+  for (const [tier] of mix) {
+    if (out.length >= n) break;
+    for (const c of byTier(tier).slice(0, n - out.length)) {
+      out.push(c);
+      taken.add(c.id);
+    }
+  }
+
+  // احتياطي: أكمل من كامل البنك إن لم تكفِ الطبقات.
+  if (out.length < n) {
+    const ids = new Set(out.map((c) => c.id));
+    out.push(...shuffle(base.filter((c) => !ids.has(c.id))).slice(0, n - out.length));
+  }
+  return shuffle(out).slice(0, n);
 }
+
 
 // ---------- Levels ----------
 export function xpForNextLevel(level: number): number {
