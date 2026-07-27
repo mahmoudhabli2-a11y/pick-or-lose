@@ -454,7 +454,7 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
                 key={i}
                 disabled={phase !== "playing" || isHidden}
                 onClick={() => handleAnswer(i)}
-                className={`${base} ${cls} ${isTF ? "justify-center" : ""} ${isHidden ? "opacity-50" : ""}`}
+                className={`${base} ${cls} ${isTF ? "justify-center" : ""} ${isHidden ? "opacity-40 [&>*]:invisible" : ""}`}
               >
 
                 {!isTF && <span className="flex-1 text-right">{a}</span>}
