@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { Gift, X } from "lucide-react";
 import { ModalShell } from "@/components/rewarded-ad";
+import { Confetti } from "@/components/confetti";
 import { addHearts } from "@/lib/hearts";
 import { loadPlayer, savePlayer, levelFromXp } from "@/lib/quiz-data";
-import { sfxReward, sfxTap } from "@/lib/fx";
+import { sfxReward, sfxLevelUp, sfxTap } from "@/lib/fx";
 
-const KEY = "tahaddi-wheel-day";
+const KEY = "tahaddi-wheel-at";
+const LEGACY_KEY = "tahaddi-wheel-day";
+const DAY_MS = 86400000;
 
 export type WheelPrize = { label: string; emoji: string; kind: "hearts" | "xp"; amount: number };
 
@@ -18,30 +21,43 @@ const PRIZES: WheelPrize[] = [
   { label: "١٠٠ نقطة خبرة", emoji: "🌟", kind: "xp", amount: 100 },
 ];
 
-function today() {
-  return Math.floor(Date.now() / 86400000);
+function lastSpinAt(): number {
+  if (typeof window === "undefined") return Date.now();
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) return Number(raw) || 0;
+    const legacy = localStorage.getItem(LEGACY_KEY);
+    if (legacy) return Number(legacy) * DAY_MS;
+    return 0;
+  } catch {
+    return Date.now();
+  }
+}
+
+/** الوقت المتبقي بالمللي ثانية حتى اللفة التالية (صفر إذا كانت متاحة). */
+export function msUntilNextSpin(): number {
+  if (typeof window === "undefined") return DAY_MS;
+  return Math.max(0, lastSpinAt() + DAY_MS - Date.now());
 }
 
 export function wheelAvailable(): boolean {
   if (typeof window === "undefined") return false;
-  try {
-    return Number(localStorage.getItem(KEY)) !== today();
-  } catch {
-    return false;
-  }
+  return msUntilNextSpin() === 0;
 }
 
 function markClaimed() {
   try {
-    localStorage.setItem(KEY, String(today()));
+    localStorage.setItem(KEY, String(Date.now()));
   } catch {}
 }
 
-/** عجلة الحظ اليومية — مرة واحدة كل يوم. */
+/** عجلة الحظ اليومية — مرة واحدة كل ٢٤ ساعة. */
 export function DailyWheel({ onClose }: { onClose: () => void }) {
   const [spinning, setSpinning] = useState(false);
   const [angle, setAngle] = useState(0);
   const [prize, setPrize] = useState<WheelPrize | null>(null);
+  const locked = !wheelAvailable() && !prize;
+
 
   function spin() {
     if (spinning || prize) return;
