@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   loadPlayer,
   savePlayer,
@@ -22,9 +22,10 @@ import {
   msUntilNextHeart,
   formatCountdown,
 } from "@/lib/hearts";
-import { sfxCorrect, sfxWrong, sfxTick, sfxLevelUp, sfxTap, primeAudio } from "@/lib/fx";
+import { sfxCorrect, sfxWrong, sfxTick, sfxLevelUp, sfxTap, sfxReward, primeAudio } from "@/lib/fx";
 import { RewardedAdButton, ModalShell } from "@/components/rewarded-ad";
-import { Heart, Trophy, X, Check, Zap, Lock, Clock, Settings } from "lucide-react";
+import { Heart, Trophy, X, Check, Zap, Lock, Clock, Settings, Scissors, Lightbulb } from "lucide-react";
+
 
 const TOTAL = 10;
 
@@ -143,6 +144,10 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
   const [bonusTime, setBonusTime] = useState(0);
   const [timeLeft, setTimeLeft] = useState(timePerQ);
   const [refillIn, setRefillIn] = useState(0);
+  const [powerups, setPowerups] = useState({ fifty: 1, time: 1, hint: 1 });
+  const [hidden, setHidden] = useState<number[]>([]);
+  const [hintOpen, setHintOpen] = useState(false);
+
   const [skillDelta, setSkillDelta] = useState<Record<SkillKey, { xp: number; score: number }>>({
     speed: { xp: 0, score: 0 }, logic: { xp: 0, score: 0 }, focus: { xp: 0, score: 0 }, math: { xp: 0, score: 0 }, memory: { xp: 0, score: 0 },
   });
@@ -153,6 +158,24 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
   const skillInfo = SKILLS[currentSkill];
   const questionTime = timePerQ + bonusTime;
   const nearEnd = idx >= challenges.length - 3;
+
+  // نسب "تصويت الجمهور" — منحازة نحو الإجابة الصحيحة.
+  const poll = useMemo(() => {
+    if (!q) return [] as number[];
+    const n = q.answers.length;
+    const right = 52 + Math.floor(Math.random() * 20);
+    const rest = 100 - right;
+    const others = Array.from({ length: n - 1 }, () => Math.random());
+    const sum = others.reduce((a, b) => a + b, 0) || 1;
+    const vals = others.map((o) => Math.round((o / sum) * rest));
+    const out: number[] = [];
+    let k = 0;
+    for (let i = 0; i < n; i++) out.push(i === q.correct ? right : vals[k++] ?? 0);
+    const diff = 100 - out.reduce((a, b) => a + b, 0);
+    out[q.correct] += diff;
+    return out;
+  }, [q]);
+
 
   useEffect(() => {
     if (phase !== "playing") return;
@@ -219,9 +242,39 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
       setIdx(nextIdx);
       setBonusTime(0);
       setSelected(null);
+      setHidden([]);
+      setHintOpen(false);
       setPhase("playing");
     }, 1100);
   }
+
+  /** ٥٠/٥٠ — إخفاء إجابتين خاطئتين. */
+  function useFifty() {
+    if (powerups.fifty <= 0 || phase !== "playing") return;
+    const wrongIdx = q.answers.map((_, i) => i).filter((i) => i !== q.correct);
+    const shuffled = wrongIdx.sort(() => Math.random() - 0.5).slice(0, Math.min(2, wrongIdx.length - (q.answers.length > 3 ? 0 : 0)));
+    setHidden(shuffled);
+    setPowerups((p) => ({ ...p, fifty: p.fifty - 1 }));
+    sfxTap();
+  }
+
+  /** وقت إضافي ١٠ ثوانٍ. */
+  function useExtraTime() {
+    if (powerups.time <= 0 || phase !== "playing") return;
+    setBonusTime((b) => b + 10);
+    setTimeLeft((t) => t + 10);
+    setPowerups((p) => ({ ...p, time: p.time - 1 }));
+    sfxReward();
+  }
+
+  /** تلميح أو تصويت الجمهور. */
+  function useHint() {
+    if (powerups.hint <= 0 || phase !== "playing") return;
+    setHintOpen(true);
+    setPowerups((p) => ({ ...p, hint: p.hint - 1 }));
+    sfxTap();
+  }
+
 
   function continueAfterAd(extraSeconds: number) {
     setHearts(addHearts(1));
@@ -353,26 +406,57 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
           <h2 className="mt-3 text-xl font-black text-foreground leading-snug min-h-[3.5rem]">{q.question}</h2>
         </div>
 
+        {/* Power-ups */}
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          <PowerUp
+            emoji="✂️"
+            label="٥٠/٥٠"
+            icon={<Scissors className="size-4" />}
+            left={powerups.fifty}
+            disabled={phase !== "playing" || q.answers.length <= 2 || hidden.length > 0}
+            onUse={useFifty}
+          />
+          <PowerUp
+            emoji="⏱️"
+            label="+١٠ ثوانٍ"
+            icon={<Clock className="size-4" />}
+            left={powerups.time}
+            disabled={phase !== "playing"}
+            onUse={useExtraTime}
+          />
+          <PowerUp
+            emoji="💡"
+            label="تلميح"
+            icon={<Lightbulb className="size-4" />}
+            left={powerups.hint}
+            disabled={phase !== "playing" || hintOpen}
+            onUse={useHint}
+          />
+        </div>
+
         {/* Answers */}
         <div className={`mt-4 grid gap-3 ${q.answers.length === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
           {q.answers.map((a, i) => {
             const isSelected = selected === i;
             const isCorrect = phase !== "playing" && i === q.correct;
             const isWrong = phase !== "playing" && isSelected && i !== q.correct;
+            const isHidden = hidden.includes(i) && phase === "playing";
             const base = "w-full rounded-2xl px-4 py-4 text-right text-lg font-bold flex items-center justify-between transition-all";
             let cls = "bg-white text-foreground shadow-card active:translate-y-0.5";
             if (isCorrect) cls = "bg-gradient-success text-white shadow-fun animate-pop";
             else if (isWrong) cls = "bg-gradient-danger text-white shadow-fun animate-shake";
             else if (phase !== "playing") cls = "bg-white/70 text-muted-foreground";
+            if (isHidden) cls = "bg-white/25 text-transparent";
             const tints = ["fun-1", "fun-2", "fun-3", "fun-4"];
             const isTF = q.answers.length === 2;
             return (
               <button
                 key={i}
-                disabled={phase !== "playing"}
+                disabled={phase !== "playing" || isHidden}
                 onClick={() => handleAnswer(i)}
-                className={`${base} ${cls} ${isTF ? "justify-center" : ""}`}
+                className={`${base} ${cls} ${isTF ? "justify-center" : ""} ${isHidden ? "opacity-40 [&>*]:invisible" : ""}`}
               >
+
                 {!isTF && <span className="flex-1 text-right">{a}</span>}
                 <span
                   className={`${isTF ? "flex-1 text-center" : ""} ${!isTF ? "size-9 rounded-xl flex items-center justify-center text-white font-black shrink-0" : "font-black text-xl"} ${
@@ -386,11 +470,35 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
           })}
         </div>
 
+        {hintOpen && phase === "playing" && (
+          <div className="mt-3 rounded-2xl bg-white/95 shadow-card p-3 animate-pop">
+            <div className="text-xs font-black text-[color:var(--primary)] inline-flex items-center gap-1">
+              <Lightbulb className="size-3.5" /> {q.hint ? "تلميح" : "تصويت الجمهور"}
+            </div>
+            {q.hint ? (
+              <p className="mt-1 text-sm font-bold text-foreground">{q.hint}</p>
+            ) : (
+              <div className="mt-2 space-y-1.5">
+                {q.answers.map((a, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-[11px] font-black text-muted-foreground w-8 tabular-nums">{poll[i]}%</span>
+                    <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                      <div className="h-full rounded-full bg-gradient-primary" style={{ width: `${poll[i]}%` }} />
+                    </div>
+                    <span className="text-[11px] font-bold text-foreground max-w-[40%] truncate">{a}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {phase === "reveal" && q.hint && (
           <div className="mt-3 text-center text-white/90 text-xs font-bold inline-flex items-center justify-center gap-1">
             <Zap className="size-3" /> {q.hint}
           </div>
         )}
+
       </div>
 
       {/* Out-of-hearts modal */}
@@ -434,3 +542,45 @@ function Chip({ icon, value, tint }: { icon: React.ReactNode; value: number; tin
     </div>
   );
 }
+
+/** زر وسيلة مساعدة داخل اللعبة. */
+function PowerUp({
+  emoji,
+  label,
+  icon,
+  left,
+  disabled,
+  onUse,
+}: {
+  emoji: string;
+  label: string;
+  icon: React.ReactNode;
+  left: number;
+  disabled?: boolean;
+  onUse: () => void;
+}) {
+  const off = disabled || left <= 0;
+  return (
+    <button
+      onClick={onUse}
+      disabled={off}
+      className={`relative rounded-2xl px-2 py-2.5 flex flex-col items-center gap-0.5 shadow-card transition active:translate-y-0.5 ${
+        off ? "bg-white/40 text-white/70" : "bg-white text-foreground"
+      }`}
+    >
+      <span className="text-xl leading-none">{emoji}</span>
+      <span className="text-[11px] font-black inline-flex items-center gap-1">
+        {icon}
+        {label}
+      </span>
+      <span
+        className={`absolute -top-1.5 -left-1.5 size-5 rounded-full text-[10px] font-black flex items-center justify-center ${
+          left > 0 ? "bg-[color:var(--fun-3)] text-white" : "bg-muted text-muted-foreground"
+        }`}
+      >
+        {left}
+      </span>
+    </button>
+  );
+}
+

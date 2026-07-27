@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { Gift, X } from "lucide-react";
 import { ModalShell } from "@/components/rewarded-ad";
-import { addHearts } from "@/lib/hearts";
+import { Confetti } from "@/components/confetti";
+import { addHearts, formatCountdown } from "@/lib/hearts";
 import { loadPlayer, savePlayer, levelFromXp } from "@/lib/quiz-data";
-import { sfxReward, sfxTap } from "@/lib/fx";
+import { sfxReward, sfxLevelUp, sfxTap } from "@/lib/fx";
 
-const KEY = "tahaddi-wheel-day";
+const KEY = "tahaddi-wheel-at";
+const LEGACY_KEY = "tahaddi-wheel-day";
+const DAY_MS = 86400000;
 
 export type WheelPrize = { label: string; emoji: string; kind: "hearts" | "xp"; amount: number };
 
@@ -18,38 +21,51 @@ const PRIZES: WheelPrize[] = [
   { label: "١٠٠ نقطة خبرة", emoji: "🌟", kind: "xp", amount: 100 },
 ];
 
-function today() {
-  return Math.floor(Date.now() / 86400000);
+function lastSpinAt(): number {
+  if (typeof window === "undefined") return Date.now();
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) return Number(raw) || 0;
+    const legacy = localStorage.getItem(LEGACY_KEY);
+    if (legacy) return Number(legacy) * DAY_MS;
+    return 0;
+  } catch {
+    return Date.now();
+  }
+}
+
+/** الوقت المتبقي بالمللي ثانية حتى اللفة التالية (صفر إذا كانت متاحة). */
+export function msUntilNextSpin(): number {
+  if (typeof window === "undefined") return DAY_MS;
+  return Math.max(0, lastSpinAt() + DAY_MS - Date.now());
 }
 
 export function wheelAvailable(): boolean {
   if (typeof window === "undefined") return false;
-  try {
-    return Number(localStorage.getItem(KEY)) !== today();
-  } catch {
-    return false;
-  }
+  return msUntilNextSpin() === 0;
 }
 
 function markClaimed() {
   try {
-    localStorage.setItem(KEY, String(today()));
+    localStorage.setItem(KEY, String(Date.now()));
   } catch {}
 }
 
-/** عجلة الحظ اليومية — مرة واحدة كل يوم. */
+/** عجلة الحظ اليومية — مرة واحدة كل ٢٤ ساعة. */
 export function DailyWheel({ onClose }: { onClose: () => void }) {
   const [spinning, setSpinning] = useState(false);
   const [angle, setAngle] = useState(0);
   const [prize, setPrize] = useState<WheelPrize | null>(null);
+  const locked = !wheelAvailable() && !prize;
+
 
   function spin() {
-    if (spinning || prize) return;
+    if (spinning || prize || locked) return;
     sfxTap();
     setSpinning(true);
     const idx = Math.floor(Math.random() * PRIZES.length);
     const seg = 360 / PRIZES.length;
-    const target = 360 * 5 + (360 - (idx * seg + seg / 2));
+    const target = angle + 360 * 6 + (360 - (idx * seg + seg / 2)) - (angle % 360);
     setAngle(target);
     setTimeout(() => {
       const won = PRIZES[idx];
@@ -62,9 +78,10 @@ export function DailyWheel({ onClose }: { onClose: () => void }) {
       }
       markClaimed();
       sfxReward();
+      sfxLevelUp();
       setSpinning(false);
       setPrize(won);
-    }, 2600);
+    }, 3800);
   }
 
   const seg = 360 / PRIZES.length;
@@ -73,15 +90,23 @@ export function DailyWheel({ onClose }: { onClose: () => void }) {
     <ModalShell
       emoji="🎡"
       title="عجلة الحظ اليومية"
-      subtitle={prize ? "مبروك! هذه جائزتك اليوم" : "لفّة واحدة كل يوم — اربح قلوباً أو نقاط خبرة"}
+      subtitle={
+        prize
+          ? "مبروك! هذه جائزتك اليوم"
+          : locked
+            ? "لقد لففت العجلة اليوم — عد بعد ٢٤ ساعة"
+            : "لفّة واحدة كل ٢٤ ساعة — اربح قلوباً أو نقاط خبرة"
+      }
     >
+      {prize && <Confetti />}
+
       <div className="relative mx-auto size-52">
         <div className="absolute left-1/2 -translate-x-1/2 -top-1 z-10 text-2xl">🔻</div>
         <div
           className="size-52 rounded-full border-8 border-white shadow-fun overflow-hidden relative"
           style={{
             transform: `rotate(${angle}deg)`,
-            transition: "transform 2.5s cubic-bezier(.15,.9,.2,1)",
+            transition: "transform 3.7s cubic-bezier(.12,.72,.12,1)",
             background: `conic-gradient(${PRIZES.map((_, i) => {
               const colors = [
                 "var(--fun-1)",
@@ -124,13 +149,19 @@ export function DailyWheel({ onClose }: { onClose: () => void }) {
         </>
       ) : (
         <>
+          {locked && (
+            <div className="rounded-2xl bg-muted px-4 py-3">
+              <div className="text-xs font-bold text-muted-foreground">اللفة التالية بعد</div>
+              <div className="text-xl font-black text-foreground tabular-nums">{formatCountdown(msUntilNextSpin())}</div>
+            </div>
+          )}
           <button
             onClick={spin}
-            disabled={spinning}
+            disabled={spinning || locked}
             className="w-full rounded-2xl bg-gradient-primary text-white py-3.5 font-black shadow-card disabled:opacity-70 inline-flex items-center justify-center gap-2"
           >
             <Gift className="size-5" />
-            {spinning ? "جارٍ اللف…" : "لُفّ العجلة"}
+            {spinning ? "جارٍ اللف…" : locked ? "غير متاحة الآن" : "لُفّ العجلة"}
           </button>
           <button
             onClick={onClose}
@@ -140,6 +171,7 @@ export function DailyWheel({ onClose }: { onClose: () => void }) {
           </button>
         </>
       )}
+
     </ModalShell>
   );
 }

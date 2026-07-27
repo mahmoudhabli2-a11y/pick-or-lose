@@ -15,8 +15,10 @@ import {
 import { useAuth, isGuest, signOut } from "@/lib/auth";
 import { loadHearts, MAX_HEARTS } from "@/lib/hearts";
 import { countryFlag } from "@/lib/countries";
-import { DailyWheel, wheelAvailable } from "@/components/daily-wheel";
+import { DailyWheel, wheelAvailable, msUntilNextSpin } from "@/components/daily-wheel";
+import { formatCountdown } from "@/lib/hearts";
 import { Trophy, Zap, Calendar, Play, Flame, ChevronLeft, Award, User, LogOut, LogIn, Heart, Settings } from "lucide-react";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -150,6 +152,10 @@ function Home() {
           icon={<Calendar className="size-6" />}
           gradient="bg-gradient-accent"
         />
+
+        {/* Daily spin */}
+        <DailySpinButton onOpen={() => setShowWheel(true)} />
+
 
         {/* Skills */}
         <div className="animate-float-up">
@@ -331,3 +337,36 @@ function AchievementStrip({ owned }: { owned: string[] }) {
     </div>
   );
 }
+
+/** زر عجلة الحظ اليومية مع عدّاد ٢٤ ساعة. */
+function DailySpinButton({ onOpen }: { onOpen: () => void }) {
+  const [left, setLeft] = useState<number | null>(null);
+
+  useEffect(() => {
+    const tick = () => setLeft(msUntilNextSpin());
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const ready = left === 0;
+
+  return (
+    <button
+      onClick={onOpen}
+      className="w-full rounded-3xl bg-gradient-success text-white p-4 shadow-card active:translate-y-0.5 transition-transform flex items-center gap-3 animate-float-up text-right"
+    >
+      <div className={`size-12 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center text-2xl ${ready ? "animate-pulse-ring" : ""}`}>
+        🎡
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="font-black text-lg leading-tight">عجلة الحظ اليومية</div>
+        <div className="text-xs font-semibold opacity-90 truncate tabular-nums">
+          {left === null ? "…" : ready ? "لفّتك متاحة الآن — اربح قلوباً أو نقاط خبرة" : `اللفة التالية بعد ${formatCountdown(left)}`}
+        </div>
+      </div>
+      <ChevronLeft className="size-5 opacity-90" />
+    </button>
+  );
+}
+
