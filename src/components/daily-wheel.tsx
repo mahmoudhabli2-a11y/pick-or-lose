@@ -106,7 +106,7 @@ export function DailyWheel({ onClose }: { onClose: () => void }) {
           className="size-52 rounded-full border-8 border-white shadow-fun overflow-hidden relative"
           style={{
             transform: `rotate(${angle}deg)`,
-            transition: "transform 2.5s cubic-bezier(.15,.9,.2,1)",
+            transition: "transform 3.7s cubic-bezier(.12,.72,.12,1)",
             background: `conic-gradient(${PRIZES.map((_, i) => {
               const colors = [
                 "var(--fun-1)",
