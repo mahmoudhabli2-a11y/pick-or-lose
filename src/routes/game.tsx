@@ -353,26 +353,57 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
           <h2 className="mt-3 text-xl font-black text-foreground leading-snug min-h-[3.5rem]">{q.question}</h2>
         </div>
 
+        {/* Power-ups */}
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          <PowerUp
+            emoji="✂️"
+            label="٥٠/٥٠"
+            icon={<Scissors className="size-4" />}
+            left={powerups.fifty}
+            disabled={phase !== "playing" || q.answers.length <= 2 || hidden.length > 0}
+            onUse={useFifty}
+          />
+          <PowerUp
+            emoji="⏱️"
+            label="+١٠ ثوانٍ"
+            icon={<Clock className="size-4" />}
+            left={powerups.time}
+            disabled={phase !== "playing"}
+            onUse={useExtraTime}
+          />
+          <PowerUp
+            emoji="💡"
+            label="تلميح"
+            icon={<Lightbulb className="size-4" />}
+            left={powerups.hint}
+            disabled={phase !== "playing" || hintOpen}
+            onUse={useHint}
+          />
+        </div>
+
         {/* Answers */}
         <div className={`mt-4 grid gap-3 ${q.answers.length === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
           {q.answers.map((a, i) => {
             const isSelected = selected === i;
             const isCorrect = phase !== "playing" && i === q.correct;
             const isWrong = phase !== "playing" && isSelected && i !== q.correct;
+            const isHidden = hidden.includes(i) && phase === "playing";
             const base = "w-full rounded-2xl px-4 py-4 text-right text-lg font-bold flex items-center justify-between transition-all";
             let cls = "bg-white text-foreground shadow-card active:translate-y-0.5";
             if (isCorrect) cls = "bg-gradient-success text-white shadow-fun animate-pop";
             else if (isWrong) cls = "bg-gradient-danger text-white shadow-fun animate-shake";
             else if (phase !== "playing") cls = "bg-white/70 text-muted-foreground";
+            if (isHidden) cls = "bg-white/25 text-transparent";
             const tints = ["fun-1", "fun-2", "fun-3", "fun-4"];
             const isTF = q.answers.length === 2;
             return (
               <button
                 key={i}
-                disabled={phase !== "playing"}
+                disabled={phase !== "playing" || isHidden}
                 onClick={() => handleAnswer(i)}
-                className={`${base} ${cls} ${isTF ? "justify-center" : ""}`}
+                className={`${base} ${cls} ${isTF ? "justify-center" : ""} ${isHidden ? "opacity-50" : ""}`}
               >
+
                 {!isTF && <span className="flex-1 text-right">{a}</span>}
                 <span
                   className={`${isTF ? "flex-1 text-center" : ""} ${!isTF ? "size-9 rounded-xl flex items-center justify-center text-white font-black shrink-0" : "font-black text-xl"} ${
