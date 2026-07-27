@@ -170,12 +170,26 @@ export function pickChallenges(n: number, skill?: SkillKey, difficulty?: Difficu
 
   if (!difficulty) return shuffle(base).slice(0, Math.min(n, base.length));
 
-  const tiers = tiersForDifficulty(difficulty);
+  const mix = tierMixForDifficulty(difficulty); // نِسَب كل طبقة
   const out: Challenge[] = [];
-  for (const t of tiers) {
-    if (out.length >= n) break;
-    out.push(...shuffle(base.filter((c) => inferTier(c) === t)).slice(0, n - out.length));
+  const taken = new Set<number>();
+  const byTier = (t: Tier) => shuffle(base.filter((c) => inferTier(c) === t && !taken.has(c.id)));
+  for (const [tier, share] of mix) {
+    const want = Math.round(n * share);
+    for (const c of byTier(tier).slice(0, want)) {
+      out.push(c);
+      taken.add(c.id);
+    }
   }
+  // أكمل من الطبقات المفضّلة إن نقص العدد.
+  for (const [tier] of mix) {
+    if (out.length >= n) break;
+    for (const c of byTier(tier).slice(0, n - out.length)) {
+      out.push(c);
+      taken.add(c.id);
+    }
+  }
+
   // احتياطي: أكمل من كامل البنك إن لم تكفِ الطبقات.
   if (out.length < n) {
     const ids = new Set(out.map((c) => c.id));
