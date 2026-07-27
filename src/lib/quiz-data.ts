@@ -158,11 +158,30 @@ export function secondsUntilNextDaily(): number {
   return Math.max(0, Math.floor((+next - +now) / 1000));
 }
 
-export function pickChallenges(n: number, skill?: SkillKey): Challenge[] {
-  const pool = skill ? CHALLENGES.filter((c) => c.skill === skill) : CHALLENGES;
-  const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, Math.min(n, shuffled.length));
+/**
+ * يختار أسئلة مناسبة لمستوى الصعوبة:
+ * المبتدئ يحصل على الأسهل فقط، والتحدّي على الأصعب.
+ */
+export function pickChallenges(n: number, skill?: SkillKey, difficulty?: Difficulty): Challenge[] {
+  const base = skill ? CHALLENGES.filter((c) => c.skill === skill) : CHALLENGES;
+  const shuffle = (arr: Challenge[]) => [...arr].sort(() => Math.random() - 0.5);
+
+  if (!difficulty) return shuffle(base).slice(0, Math.min(n, base.length));
+
+  const tiers = tiersForDifficulty(difficulty);
+  const out: Challenge[] = [];
+  for (const t of tiers) {
+    if (out.length >= n) break;
+    out.push(...shuffle(base.filter((c) => inferTier(c) === t)).slice(0, n - out.length));
+  }
+  // احتياطي: أكمل من كامل البنك إن لم تكفِ الطبقات.
+  if (out.length < n) {
+    const ids = new Set(out.map((c) => c.id));
+    out.push(...shuffle(base.filter((c) => !ids.has(c.id))).slice(0, n - out.length));
+  }
+  return shuffle(out);
 }
+
 
 // ---------- Levels ----------
 export function xpForNextLevel(level: number): number {
