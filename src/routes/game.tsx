@@ -542,3 +542,45 @@ function Chip({ icon, value, tint }: { icon: React.ReactNode; value: number; tin
     </div>
   );
 }
+
+/** زر وسيلة مساعدة داخل اللعبة. */
+function PowerUp({
+  emoji,
+  label,
+  icon,
+  left,
+  disabled,
+  onUse,
+}: {
+  emoji: string;
+  label: string;
+  icon: React.ReactNode;
+  left: number;
+  disabled?: boolean;
+  onUse: () => void;
+}) {
+  const off = disabled || left <= 0;
+  return (
+    <button
+      onClick={onUse}
+      disabled={off}
+      className={`relative rounded-2xl px-2 py-2.5 flex flex-col items-center gap-0.5 shadow-card transition active:translate-y-0.5 ${
+        off ? "bg-white/40 text-white/70" : "bg-white text-foreground"
+      }`}
+    >
+      <span className="text-xl leading-none">{emoji}</span>
+      <span className="text-[11px] font-black inline-flex items-center gap-1">
+        {icon}
+        {label}
+      </span>
+      <span
+        className={`absolute -top-1.5 -left-1.5 size-5 rounded-full text-[10px] font-black flex items-center justify-center ${
+          left > 0 ? "bg-[color:var(--fun-3)] text-white" : "bg-muted text-muted-foreground"
+        }`}
+      >
+        {left}
+      </span>
+    </button>
+  );
+}
+
