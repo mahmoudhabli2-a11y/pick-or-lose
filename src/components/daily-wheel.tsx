@@ -60,12 +60,12 @@ export function DailyWheel({ onClose }: { onClose: () => void }) {
 
 
   function spin() {
-    if (spinning || prize) return;
+    if (spinning || prize || locked) return;
     sfxTap();
     setSpinning(true);
     const idx = Math.floor(Math.random() * PRIZES.length);
     const seg = 360 / PRIZES.length;
-    const target = 360 * 5 + (360 - (idx * seg + seg / 2));
+    const target = angle + 360 * 6 + (360 - (idx * seg + seg / 2)) - (angle % 360);
     setAngle(target);
     setTimeout(() => {
       const won = PRIZES[idx];
@@ -78,9 +78,10 @@ export function DailyWheel({ onClose }: { onClose: () => void }) {
       }
       markClaimed();
       sfxReward();
+      sfxLevelUp();
       setSpinning(false);
       setPrize(won);
-    }, 2600);
+    }, 3800);
   }
 
   const seg = 360 / PRIZES.length;
@@ -89,8 +90,16 @@ export function DailyWheel({ onClose }: { onClose: () => void }) {
     <ModalShell
       emoji="🎡"
       title="عجلة الحظ اليومية"
-      subtitle={prize ? "مبروك! هذه جائزتك اليوم" : "لفّة واحدة كل يوم — اربح قلوباً أو نقاط خبرة"}
+      subtitle={
+        prize
+          ? "مبروك! هذه جائزتك اليوم"
+          : locked
+            ? "لقد لففت العجلة اليوم — عد بعد ٢٤ ساعة"
+            : "لفّة واحدة كل ٢٤ ساعة — اربح قلوباً أو نقاط خبرة"
+      }
     >
+      {prize && <Confetti />}
+
       <div className="relative mx-auto size-52">
         <div className="absolute left-1/2 -translate-x-1/2 -top-1 z-10 text-2xl">🔻</div>
         <div
