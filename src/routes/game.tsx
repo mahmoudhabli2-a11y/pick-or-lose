@@ -386,11 +386,35 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
           })}
         </div>
 
+        {hintOpen && phase === "playing" && (
+          <div className="mt-3 rounded-2xl bg-white/95 shadow-card p-3 animate-pop">
+            <div className="text-xs font-black text-[color:var(--primary)] inline-flex items-center gap-1">
+              <Lightbulb className="size-3.5" /> {q.hint ? "تلميح" : "تصويت الجمهور"}
+            </div>
+            {q.hint ? (
+              <p className="mt-1 text-sm font-bold text-foreground">{q.hint}</p>
+            ) : (
+              <div className="mt-2 space-y-1.5">
+                {q.answers.map((a, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-[11px] font-black text-muted-foreground w-8 tabular-nums">{poll[i]}%</span>
+                    <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                      <div className="h-full rounded-full bg-gradient-primary" style={{ width: `${poll[i]}%` }} />
+                    </div>
+                    <span className="text-[11px] font-bold text-foreground max-w-[40%] truncate">{a}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {phase === "reveal" && q.hint && (
           <div className="mt-3 text-center text-white/90 text-xs font-bold inline-flex items-center justify-center gap-1">
             <Zap className="size-3" /> {q.hint}
           </div>
         )}
+
       </div>
 
       {/* Out-of-hearts modal */}
