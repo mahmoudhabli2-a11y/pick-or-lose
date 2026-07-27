@@ -17,6 +17,8 @@ import { loadHearts, MAX_HEARTS } from "@/lib/hearts";
 import { countryFlag } from "@/lib/countries";
 import { DailyWheel, wheelAvailable, msUntilNextSpin } from "@/components/daily-wheel";
 import { formatCountdown } from "@/lib/hearts";
+import { InviteFriendsButton } from "@/components/invite-friends";
+
 import { Trophy, Zap, Calendar, Play, Flame, ChevronLeft, Award, User, LogOut, LogIn, Heart, Settings } from "lucide-react";
 
 
