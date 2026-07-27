@@ -49,3 +49,15 @@ export async function shareRank(text: string): Promise<"shared" | "copied" | "wh
 export function whatsappUrl(text: string): string {
   return `https://wa.me/?text=${encodeURIComponent(text)}`;
 }
+
+/** رسالة دعوة الأصدقاء لتحميل اللعبة. */
+export const INVITE_MESSAGE =
+  "تحدّيت عقلي في لعبة تحدي العقول! 🧠🔥 هل تقدر تتغلب على النتيجة التي حققتها؟ حمل اللعبة الآن وتحداهم:";
+
+export function buildInviteText(score?: number): string {
+  const lines = [INVITE_MESSAGE];
+  if (typeof score === "number") lines.push(`🎯 نتيجتي: ${score}`);
+  lines.push(SITE);
+  return lines.join("\n");
+}
+
