@@ -158,6 +158,24 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
   const questionTime = timePerQ + bonusTime;
   const nearEnd = idx >= challenges.length - 3;
 
+  // نسب "تصويت الجمهور" — منحازة نحو الإجابة الصحيحة.
+  const poll = useMemo(() => {
+    if (!q) return [] as number[];
+    const n = q.answers.length;
+    const right = 52 + Math.floor(Math.random() * 20);
+    const rest = 100 - right;
+    const others = Array.from({ length: n - 1 }, () => Math.random());
+    const sum = others.reduce((a, b) => a + b, 0) || 1;
+    const vals = others.map((o) => Math.round((o / sum) * rest));
+    const out: number[] = [];
+    let k = 0;
+    for (let i = 0; i < n; i++) out.push(i === q.correct ? right : vals[k++] ?? 0);
+    const diff = 100 - out.reduce((a, b) => a + b, 0);
+    out[q.correct] += diff;
+    return out;
+  }, [q]);
+
+
   useEffect(() => {
     if (phase !== "playing") return;
     setTimeLeft(questionTime);
