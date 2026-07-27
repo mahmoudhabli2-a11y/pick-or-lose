@@ -4,7 +4,7 @@
 
 import { EXTRA_CHALLENGES } from "./challenges-extra";
 import { EASY_CHALLENGES, HARD_CHALLENGES } from "./challenges-tiers";
-import { inferTier, tiersForDifficulty } from "./difficulty";
+import { inferTier, tierMixForDifficulty, type Tier } from "./difficulty";
 
 export type SkillKey = "speed" | "logic" | "focus" | "math" | "memory";
 

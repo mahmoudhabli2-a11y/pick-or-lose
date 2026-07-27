@@ -76,3 +76,17 @@ export function tiersForDifficulty(d: Difficulty): Tier[] {
       return ["hard", "medium"];
   }
 }
+
+/** توزيع نِسَب الطبقات لكل وضع لعب (المجموع = ١). */
+export function tierMixForDifficulty(d: Difficulty): [Tier, number][] {
+  switch (d) {
+    case "beginner":
+      return [["easy", 1]];
+    case "fast":
+      return [["easy", 0.6], ["medium", 0.4]];
+    case "focus":
+      return [["medium", 0.7], ["easy", 0.15], ["hard", 0.15]];
+    case "challenge":
+      return [["hard", 0.6], ["medium", 0.4]];
+  }
+}
