@@ -143,6 +143,10 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
   const [bonusTime, setBonusTime] = useState(0);
   const [timeLeft, setTimeLeft] = useState(timePerQ);
   const [refillIn, setRefillIn] = useState(0);
+  const [powerups, setPowerups] = useState({ fifty: 1, time: 1, hint: 1 });
+  const [hidden, setHidden] = useState<number[]>([]);
+  const [hintOpen, setHintOpen] = useState(false);
+
   const [skillDelta, setSkillDelta] = useState<Record<SkillKey, { xp: number; score: number }>>({
     speed: { xp: 0, score: 0 }, logic: { xp: 0, score: 0 }, focus: { xp: 0, score: 0 }, math: { xp: 0, score: 0 }, memory: { xp: 0, score: 0 },
   });
