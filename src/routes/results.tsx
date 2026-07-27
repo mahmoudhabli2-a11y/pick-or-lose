@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { addLeaderboardEntry, loadPlayer, savePlayer, levelFromXp } from "@/lib/quiz-data";
 import { RewardedAdButton } from "@/components/rewarded-ad";
 import { ShareRankButton } from "@/components/share-rank";
+import { InviteFriendsButton } from "@/components/invite-friends";
+
 import { buildShareText } from "@/lib/share";
 import { countryFlag } from "@/lib/countries";
 import { RotateCw, Home, Trophy, Check, X, Save, Sparkles } from "lucide-react";
@@ -138,6 +140,12 @@ function ResultsPage() {
             })}
           />
         </div>
+
+        {/* Invite friends */}
+        <div className="mt-4">
+          <InviteFriendsButton score={result.score} />
+        </div>
+
 
         {/* Save to leaderboard */}
         <div className="mt-4 rounded-3xl bg-white/95 shadow-card p-5 animate-float-up">
