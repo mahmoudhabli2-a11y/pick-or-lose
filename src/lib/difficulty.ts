@@ -29,8 +29,10 @@ export function inferTier(c: Challenge): Tier {
       score += 2;
       break;
     case "sequence":
-    case "memory":
       score += 1;
+      break;
+    case "memory":
+      score += 0.5;
       break;
     case "odd":
       score -= 0.5;
@@ -40,13 +42,16 @@ export function inferTier(c: Challenge): Tier {
   }
 
   if (c.type === "math" || c.type === "sequence") {
-    if (/[√²³^]|٪|%|جذر|أوّلي|أولي|معادلة|مضاعف|كسر|متوسط|نسبة/.test(raw)) score += 2;
+    const complex = /[√²³^]|٪|%|جذر|أوّلي|أولي|معادلة|مضاعف|كسر|متوسط|نسبة/.test(raw);
+    if (complex) score += 2;
     if (/[×÷*/]/.test(q)) score += 1;
     if (ops >= 2) score += 1;
     if (maxNum > 100) score += 1;
-    else if (maxNum > 20) score += 0.5;
-    if (maxNum <= 10 && ops <= 1 && /[+\-]/.test(q)) score -= 1.5;
+    else if (maxNum > 20) score += 0.75;
+    // خصم للجمع/الطرح البسيط بأرقام صغيرة فقط.
+    if (!complex && maxNum <= 12 && ops <= 1 && /[+\-]/.test(q)) score -= 1.5;
   }
+
 
   if (len > 90) score += 1.5;
   else if (len > 55) score += 0.75;
