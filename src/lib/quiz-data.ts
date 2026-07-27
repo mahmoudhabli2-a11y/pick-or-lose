@@ -195,7 +195,7 @@ export function pickChallenges(n: number, skill?: SkillKey, difficulty?: Difficu
     const ids = new Set(out.map((c) => c.id));
     out.push(...shuffle(base.filter((c) => !ids.has(c.id))).slice(0, n - out.length));
   }
-  return shuffle(out);
+  return shuffle(out).slice(0, n);
 }
 
 
