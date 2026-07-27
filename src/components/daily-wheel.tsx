@@ -149,13 +149,19 @@ export function DailyWheel({ onClose }: { onClose: () => void }) {
         </>
       ) : (
         <>
+          {locked && (
+            <div className="rounded-2xl bg-muted px-4 py-3">
+              <div className="text-xs font-bold text-muted-foreground">اللفة التالية بعد</div>
+              <div className="text-xl font-black text-foreground tabular-nums">{formatCountdown(msUntilNextSpin())}</div>
+            </div>
+          )}
           <button
             onClick={spin}
-            disabled={spinning}
+            disabled={spinning || locked}
             className="w-full rounded-2xl bg-gradient-primary text-white py-3.5 font-black shadow-card disabled:opacity-70 inline-flex items-center justify-center gap-2"
           >
             <Gift className="size-5" />
-            {spinning ? "جارٍ اللف…" : "لُفّ العجلة"}
+            {spinning ? "جارٍ اللف…" : locked ? "غير متاحة الآن" : "لُفّ العجلة"}
           </button>
           <button
             onClick={onClose}
@@ -165,6 +171,7 @@ export function DailyWheel({ onClose }: { onClose: () => void }) {
           </button>
         </>
       )}
+
     </ModalShell>
   );
 }
