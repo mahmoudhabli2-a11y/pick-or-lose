@@ -37,6 +37,8 @@ export type Challenge = {
   answers: string[];
   correct: number;
   hint?: string;
+  /** تصنيف صعوبة اختياري؛ إن غاب يُستنتج تلقائياً. */
+  tier?: "easy" | "medium" | "hard";
 };
 
 // ---------- core challenges ----------
