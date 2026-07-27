@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Gift, X } from "lucide-react";
 import { ModalShell } from "@/components/rewarded-ad";
 import { Confetti } from "@/components/confetti";
-import { addHearts } from "@/lib/hearts";
+import { addHearts, formatCountdown } from "@/lib/hearts";
 import { loadPlayer, savePlayer, levelFromXp } from "@/lib/quiz-data";
 import { sfxReward, sfxLevelUp, sfxTap } from "@/lib/fx";
 
