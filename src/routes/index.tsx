@@ -151,6 +151,10 @@ function Home() {
           gradient="bg-gradient-accent"
         />
 
+        {/* Daily spin */}
+        <DailySpinButton onOpen={() => setShowWheel(true)} />
+
+
         {/* Skills */}
         <div className="animate-float-up">
           <SectionHeader title="طوّر مهاراتك" subtitle="اختر مهارة وابدأ التدريب" />
