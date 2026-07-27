@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, useSearch, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   loadPlayer,
   savePlayer,
@@ -22,9 +22,10 @@ import {
   msUntilNextHeart,
   formatCountdown,
 } from "@/lib/hearts";
-import { sfxCorrect, sfxWrong, sfxTick, sfxLevelUp, sfxTap, primeAudio } from "@/lib/fx";
+import { sfxCorrect, sfxWrong, sfxTick, sfxLevelUp, sfxTap, sfxReward, primeAudio } from "@/lib/fx";
 import { RewardedAdButton, ModalShell } from "@/components/rewarded-ad";
-import { Heart, Trophy, X, Check, Zap, Lock, Clock, Settings } from "lucide-react";
+import { Heart, Trophy, X, Check, Zap, Lock, Clock, Settings, Scissors, Lightbulb } from "lucide-react";
+
 
 const TOTAL = 10;
 
