@@ -47,7 +47,7 @@ export function inferTier(c: Challenge): Tier {
     if (/[×÷*/]/.test(q)) score += 1;
     if (ops >= 2) score += 1;
     if (maxNum > 100) score += 1;
-    else if (maxNum > 20) score += 0.75;
+    else if (maxNum > 20) score += 1;
     // خصم للجمع/الطرح البسيط بأرقام صغيرة فقط.
     if (!complex && maxNum <= 12 && ops <= 1 && /[+\-]/.test(q)) score -= 1.5;
   }
