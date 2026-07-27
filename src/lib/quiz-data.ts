@@ -3,6 +3,7 @@
 // ============================================================
 
 import { EXTRA_CHALLENGES } from "./challenges-extra";
+import { inferTier, tiersForDifficulty } from "./difficulty";
 
 export type SkillKey = "speed" | "logic" | "focus" | "math" | "memory";
 
