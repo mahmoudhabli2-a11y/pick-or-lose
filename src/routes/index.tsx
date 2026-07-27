@@ -177,6 +177,10 @@ function Home() {
           gradient="bg-gradient-primary"
         />
 
+        {/* Invite friends */}
+        <InviteFriendsButton score={p?.bestScore} />
+
+
         {showWheel && (
           <DailyWheel
             onClose={() => {
