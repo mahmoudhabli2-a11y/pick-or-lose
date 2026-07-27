@@ -3,6 +3,7 @@
 // ============================================================
 
 import { EXTRA_CHALLENGES } from "./challenges-extra";
+import { EASY_CHALLENGES, HARD_CHALLENGES } from "./challenges-tiers";
 import { inferTier, tiersForDifficulty } from "./difficulty";
 
 export type SkillKey = "speed" | "logic" | "focus" | "math" | "memory";
@@ -134,7 +135,7 @@ const CORE_CHALLENGES: Challenge[] = [
 ];
 
 /** Full bank: core + extra (300+ challenges). */
-export const CHALLENGES: Challenge[] = [...CORE_CHALLENGES, ...EXTRA_CHALLENGES];
+export const CHALLENGES: Challenge[] = [...CORE_CHALLENGES, ...EXTRA_CHALLENGES, ...EASY_CHALLENGES, ...HARD_CHALLENGES];
 
 // ---------- Daily challenges ----------
 export const DAILY_CHALLENGES: Challenge[] = [
