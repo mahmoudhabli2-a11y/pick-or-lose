@@ -139,6 +139,12 @@ function ResultsPage() {
           />
         </div>
 
+        {/* Invite friends */}
+        <div className="mt-4">
+          <InviteFriendsButton score={result.score} />
+        </div>
+
+
         {/* Save to leaderboard */}
         <div className="mt-4 rounded-3xl bg-white/95 shadow-card p-5 animate-float-up">
           <label className="text-sm font-bold text-muted-foreground">أضف اسمك للمتصدرين</label>
