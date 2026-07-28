@@ -506,10 +506,10 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
         <ModalShell
           emoji="💔"
           title="نفدت القلوب!"
-          subtitle={`الحد الأقصى ${MAX_HEARTS} قلوب — يُعاد قلب واحد كل ٢٠ دقيقة`}
+          subtitle={`شاهد إعلاناً قصيراً لاستكمال اللعب مع الاحتفاظ بنتيجتك (${score} نقطة)`}
         >
           <RewardedAdButton
-            label="شاهد إعلاناً واحصل على ❤️ +1"
+            label="شاهد إعلاناً وأكمل نتيجتك ❤️ +1"
             onReward={() => continueAfterAd(0)}
           />
           {nearEnd && (
@@ -518,6 +518,7 @@ function PlaySession({ skill, difficulty, onExit }: { skill?: SkillKey; difficul
               onReward={() => continueAfterAd(5)}
             />
           )}
+
           <div className="rounded-2xl bg-[color:var(--muted)] p-4">
             <div className="text-sm font-bold text-muted-foreground">انتظار التعبئة</div>
             <div className="text-2xl font-black text-foreground tabular-nums">{formatCountdown(refillIn)}</div>
