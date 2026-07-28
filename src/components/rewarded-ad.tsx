@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { PlayCircle, Loader2 } from "lucide-react";
 import { sfxReward, sfxTap } from "@/lib/fx";
+import { hasNativeAds, showRewardedAd } from "@/lib/ads";
 
-/** Simulated rewarded-ad button. Shows a short "ad playing" state,
- *  then fires onReward. Swap the timer for a real ad SDK later. */
+/** Rewarded-video ad button (AdMob on native, simulated playback on web). */
 export function RewardedAdButton({
   label,
   onReward,
@@ -29,21 +29,35 @@ export function RewardedAdButton({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing, left]);
 
+  async function start() {
+    if (playing) return;
+    sfxTap();
+    if (hasNativeAds()) {
+      setPlaying(true);
+      setLeft(-1); // no countdown; native ad drives the flow
+      const ok = await showRewardedAd();
+      setPlaying(false);
+      if (ok) {
+        sfxReward();
+        onReward();
+      }
+      return;
+    }
+    setLeft(3);
+    setPlaying(true);
+  }
+
   return (
     <button
-      onClick={() => {
-        if (playing) return;
-        sfxTap();
-        setLeft(3);
-        setPlaying(true);
-      }}
+      onClick={start}
       disabled={playing}
       className={`w-full rounded-2xl bg-gradient-primary text-white px-4 py-3.5 font-black shadow-card active:translate-y-0.5 transition flex items-center justify-center gap-2 disabled:opacity-80 ${className}`}
     >
+
       {playing ? (
         <>
           <Loader2 className="size-5 animate-spin" />
-          الإعلان قيد التشغيل… {left}
+          الإعلان قيد التشغيل…{left >= 0 ? ` ${left}` : ""}
         </>
       ) : (
         <>
