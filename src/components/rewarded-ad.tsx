@@ -57,7 +57,7 @@ export function RewardedAdButton({
       {playing ? (
         <>
           <Loader2 className="size-5 animate-spin" />
-          الإعلان قيد التشغيل… {left}
+          الإعلان قيد التشغيل…{left >= 0 ? ` ${left}` : ""}
         </>
       ) : (
         <>
