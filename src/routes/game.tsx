@@ -18,7 +18,7 @@ import {
   loadHearts,
   spendHeart,
   addHearts,
-  MAX_HEARTS,
+  
   msUntilNextHeart,
   formatCountdown,
 } from "@/lib/hearts";
